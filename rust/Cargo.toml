@@ -1,10 +1,14 @@
 [package]
-name = "Intro-To-Software-Projects"
+name = "fnaf-5-double-vision"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 color-eyre = "0.6.5"
+godot = { version = "0.3.4", features = ["api-4-1"] }
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
