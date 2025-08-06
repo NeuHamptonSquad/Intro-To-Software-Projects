@@ -41,48 +41,58 @@
   let openSockets = 0;
   createSocket(3000);
   function createSocket(socketPort) {
+    let attempts = 0;
     const socketConnectInterval = setInterval(async () => {
-      const ping = await fetch(`http://localhost:${socketPort}/ping`);
-      const pingResult = await ping.text();
-      if (pingResult === "pong") {
-        clearInterval(socketConnectInterval);
-        const socket = new WebSocket(`ws://localhost:${socketPort}/ws`);
-        socket.addEventListener("message", async (event) => {
-          if (typeof event.data === "string") {
-            let newLog = document.createElement('p');
-            newLog.innerHTML = event.data;
-            log.insertBefore(newLog, anchor);
-          } else {
-            const dataView = new DataView(await event.data.arrayBuffer());
-            const port = dataView.getUint16(0, true);
-            console.log(`Connecting to port ${port}`);
-            createSocket(port)
-          }
-        });
-        let heartbeatInterval;
-        socket.addEventListener("open", (event) => {
-          openSockets += 1;
-          heartbeatInterval = setInterval(() => {
-            socket.send("ping");
-          }, 1000);
-        });
-        socket.addEventListener("error", onError);
-        socket.addEventListener("close", onError);
-        function onError(event) {
-          clearInterval(heartbeatInterval);
-          openSockets -= 1;
-          let newSeparator = document.createElement('hr');
-          log.insertBefore(newSeparator, anchor);
-          if (openSockets == 0) {
-            setInterval(async () => {
-              // We want to reconnect to the master
-              const ping = await fetch(`http://localhost:3000/ping`);
-              const pingResult = await ping.text();
-              if (pingResult === "pong") {
-                window.location.reload();
-              }
+      attempts += 1;
+      try {
+        const ping = await fetch(`http://localhost:${socketPort}/ping`);
+        const pingResult = await ping.text();
+        if (pingResult === "pong") {
+          clearInterval(socketConnectInterval);
+          const socket = new WebSocket(`ws://localhost:${socketPort}/ws`);
+          socket.addEventListener("message", async (event) => {
+            if (typeof event.data === "string") {
+              let newLog = document.createElement('p');
+              newLog.innerHTML = event.data;
+              log.insertBefore(newLog, anchor);
+            } else {
+              const dataView = new DataView(await event.data.arrayBuffer());
+              const port = dataView.getUint16(0, true);
+              console.log(`Connecting to port ${port}`);
+              createSocket(port)
+            }
+          });
+          let heartbeatInterval;
+          socket.addEventListener("open", (event) => {
+            openSockets += 1;
+            heartbeatInterval = setInterval(() => {
+              socket.send("ping");
             }, 1000);
+          });
+          socket.addEventListener("error", onError);
+          socket.addEventListener("close", onError);
+          function onError(event) {
+            clearInterval(heartbeatInterval);
+            openSockets -= 1;
+            let newSeparator = document.createElement('hr');
+            log.insertBefore(newSeparator, anchor);
+            if (openSockets == 0) {
+              setInterval(async () => {
+                // We want to reconnect to the master
+                const ping = await fetch(`http://localhost:3000/ping`);
+                const pingResult = await ping.text();
+                if (pingResult === "pong") {
+                  window.location.reload();
+                }
+              }, 1000);
+            }
           }
+        } else {
+          throw new Error("Incorrect response");
+        }
+      } catch (e) {
+        if (attempts == 3) {
+          clearInterval(socketConnectInterval);
         }
       }
     }, 1000);
