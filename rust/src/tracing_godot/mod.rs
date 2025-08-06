@@ -1,12 +1,13 @@
 use std::{
     fmt::Debug,
     io::{ErrorKind, Write},
-    sync::Arc,
+    sync::{Arc, atomic::AtomicU16},
     thread::JoinHandle,
 };
 
 use axum::{
     Router,
+    body::Bytes,
     extract::{
         State, WebSocketUpgrade,
         ws::{self, WebSocket},
@@ -14,6 +15,7 @@ use axum::{
     response::Html,
     routing::get,
 };
+use futures_util::TryFutureExt;
 use godot::{classes::Object, prelude::*};
 use tokio::sync::broadcast;
 
@@ -64,6 +66,12 @@ impl Logger {
     }
 }
 
+#[derive(Clone)]
+pub(crate) enum LogServerEvent {
+    Log(Arc<str>),
+    NewInstance(u16),
+}
+
 pub(crate) struct LogServerWriter;
 
 impl Write for LogServerWriter {
@@ -71,7 +79,7 @@ impl Write for LogServerWriter {
         let buf =
             std::str::from_utf8(buf).map_err(|e| std::io::Error::new(ErrorKind::InvalidData, e))?;
         if let Some(log_server) = LOG_SERVER.get() {
-            let _ = log_server.log_sender.send(buf.into());
+            let _ = log_server.log_sender.send(LogServerEvent::Log(buf.into()));
         }
         Ok(buf.len())
     }
@@ -83,7 +91,7 @@ impl Write for LogServerWriter {
 
 pub(crate) struct LogServer {
     handle: axum_server::Handle,
-    log_sender: broadcast::Sender<Arc<str>>,
+    log_sender: broadcast::Sender<LogServerEvent>,
     join_handle: JoinHandle<()>,
 }
 
@@ -117,42 +125,101 @@ impl LogServer {
     }
 }
 
+#[derive(Clone)]
+struct LogServerState {
+    log_sender: broadcast::Sender<LogServerEvent>,
+    port_serial: Arc<AtomicU16>,
+}
+
+impl LogServerState {
+    fn new(log_sender: broadcast::Sender<LogServerEvent>) -> Self {
+        Self {
+            log_sender,
+            port_serial: Arc::new(3001.into()),
+        }
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
 pub(crate) async fn start_log_server(
     handle: axum_server::Handle,
-    log_sender: broadcast::Sender<Arc<str>>,
+    log_sender: broadcast::Sender<LogServerEvent>,
 ) {
     let app = Router::new()
         .route("/", get(async || Html(include_str!("log_server.html"))))
         .route("/ping", get(async || "pong"))
+        .route("/new_instance", get(new_instance))
         .route("/ws", get(log_ws))
-        .with_state(log_sender);
+        .with_state(LogServerState::new(log_sender));
 
-    axum_server::bind(([127, 0, 0, 1], 3000).into())
+    let socket_addr = if let Ok(response) = reqwest::get("http://localhost:3000/new_instance")
+        .and_then(|resp| resp.text())
+        .await
+    {
+        let port: u16 = response.parse().unwrap();
+        // There is an editor running, we are not the
+        // main server.
+        ([127, 0, 0, 1], port).into()
+    } else {
+        // We are the main server
+        ([127, 0, 0, 1], 3000).into()
+    };
+
+    axum_server::bind(socket_addr)
         .handle(handle)
         .serve(app.into_make_service())
         .await
         .unwrap();
 }
 
-async fn log_ws(
-    State(log_sender): State<broadcast::Sender<Arc<str>>>,
-    ws: WebSocketUpgrade,
-) -> axum::response::Response {
-    ws.on_upgrade(move |ws| handle_socket(ws, log_sender.subscribe()))
+async fn new_instance(State(log_server_state): State<LogServerState>) -> String {
+    let new_instance_port = log_server_state
+        .port_serial
+        .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+    // You cannot spawn 1000 instances of the game
+    // simultaniously. Cope, seath, cry about it.
+    if new_instance_port == 3999 {
+        log_server_state
+            .port_serial
+            .store(3001, std::sync::atomic::Ordering::Release);
+    }
+    let _ = log_server_state
+        .log_sender
+        .send(LogServerEvent::NewInstance(new_instance_port));
+    new_instance_port.to_string()
 }
 
-async fn handle_socket(mut socket: WebSocket, mut log_receiver: broadcast::Receiver<Arc<str>>) {
+async fn log_ws(
+    State(log_server_state): State<LogServerState>,
+    ws: WebSocketUpgrade,
+) -> axum::response::Response {
+    ws.on_upgrade(move |ws| handle_socket(ws, log_server_state.log_sender.subscribe()))
+}
+
+async fn handle_socket(
+    mut socket: WebSocket,
+    mut log_event_receiver: broadcast::Receiver<LogServerEvent>,
+) {
     loop {
         tokio::select! {
-             log = log_receiver.recv() => {
-                let Ok(log) = log else {
+             log_event = log_event_receiver.recv() => {
+                let Ok(log_event) = log_event else {
                     return;
                 };
-                let html = ansi_to_html::convert(&log).unwrap();
-                if let Err(_) = socket.send(ws::Message::Text(html.into())).await {
-                    return;
-                };
+                match log_event {
+                    LogServerEvent::Log(log) => {
+                        let html = ansi_to_html::convert(&log).unwrap();
+                        if let Err(_) = socket.send(ws::Message::Text(html.into())).await {
+                            return;
+                        };
+                    }
+                    LogServerEvent::NewInstance(port) => {
+                        let port = port.to_le_bytes();
+                        if let Err(_) = socket.send(ws::Message::Binary(Bytes::from_owner(port))).await {
+                            return;
+                        };
+                    }
+                }
             }
             msg = socket.recv() => {
                 if msg.and_then(|m| m.ok()).is_none() {
