@@ -63,7 +63,7 @@
   let log = document.getElementById('log');
   let anchor = document.getElementById('anchor');
   let openSockets = 0;
-  createSocket(3000);
+  createSocket(8000);
   function createSocket(socketPort) {
     let attempts = 0;
     const socketConnectInterval = setInterval(async () => {
@@ -103,7 +103,7 @@
             if (openSockets == 0) {
               setInterval(async () => {
                 // We want to reconnect to the master
-                const ping = await fetch(`http://localhost:3000/ping`);
+                const ping = await fetch(`http://localhost:8000/ping`);
                 const pingResult = await ping.text();
                 if (pingResult === "pong") {
                   window.location.reload();
