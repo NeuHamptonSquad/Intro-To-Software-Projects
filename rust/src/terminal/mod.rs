@@ -32,8 +32,6 @@ pub struct Terminal {
 impl INode for Terminal {
     #[instrument(skip_all)]
     fn init(base: Base<Node>) -> Self {
-        tracing::info!("Hello, world!"); // Prints to the Godot console
-
         Self {
             base,
             terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
@@ -261,6 +259,7 @@ impl INode for Terminal {
 
 impl Terminal {
     fn event(&mut self, event: crossterm::event::Event) {
+        tracing::debug!(event = ?event, "New Event");
         self.latest_event = event;
     }
 }

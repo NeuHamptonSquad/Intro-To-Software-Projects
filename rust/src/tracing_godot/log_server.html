@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <style>
+    body {
+      background-color: #121212;
+    }
+
+    #log * {
+      overflow-anchor: none;
+    }
+
+    #anchor {
+      overflow-anchor: auto;
+      height: 1px;
+    }
+
+    p {
+      font-family: monospace;
+      font-size: 12px;
+      word-wrap: break-word;
+      margin: 0px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="log">
+    <div id="anchor"></div>
+  </div>
+</body>
+
+<script>
+  let log = document.getElementById('log');
+  let anchor = document.getElementById('anchor');
+  const socket = new WebSocket("ws://localhost:3000/ws");
+  socket.addEventListener("message", (event) => {
+    let newLog = document.createElement('p');
+    newLog.innerHTML = event.data;
+    log.insertBefore(newLog, anchor);
+  });
+  let heartbeatInterval;
+  socket.addEventListener("open", (event) => {
+    heartbeatInterval = setInterval(() => {
+      socket.send("ping");
+    }, 1000);
+  });
+  socket.addEventListener("error", onError);
+  socket.addEventListener("close", onError);
+  function onError(event) {
+    clearInterval(heartbeatInterval);
+    setInterval(async () => {
+      const ping = await fetch("http://localhost:3000/ping");
+      const pingResult = await ping.text();
+      if (pingResult === "pong") {
+        window.location.reload();
+      }
+    }, 1000);
+  }
+</script>
+
+</html>
