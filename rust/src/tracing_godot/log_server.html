@@ -75,7 +75,8 @@
           log.insertBefore(newSeparator, anchor);
           if (openSockets == 0) {
             setInterval(async () => {
-              const ping = await fetch(`http://localhost:${socketPort}/ping`);
+              // We want to reconnect to the master
+              const ping = await fetch(`http://localhost:3000/ping`);
               const pingResult = await ping.text();
               if (pingResult === "pong") {
                 window.location.reload();

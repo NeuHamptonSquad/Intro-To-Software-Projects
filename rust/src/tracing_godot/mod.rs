@@ -17,7 +17,7 @@ use axum::{
 };
 use futures_util::TryFutureExt;
 use godot::{classes::Object, prelude::*};
-use tokio::sync::broadcast;
+use tokio::sync::{Mutex, broadcast};
 
 use crate::LOG_SERVER;
 
@@ -104,11 +104,11 @@ impl Debug for LogServer {
 impl LogServer {
     pub(crate) fn new() -> Self {
         let handle = axum_server::Handle::new();
-        let (log_sender, _) = broadcast::channel(10);
+        let (log_sender, log_receiver) = broadcast::channel(10);
         let join_handle = std::thread::spawn({
             let handle = handle.clone();
             let log_sender = log_sender.clone();
-            move || start_log_server(handle, log_sender)
+            move || start_log_server(handle, log_sender, log_receiver)
         });
         Self {
             handle,
@@ -129,11 +129,16 @@ impl LogServer {
 struct LogServerState {
     log_sender: broadcast::Sender<LogServerEvent>,
     port_serial: Arc<AtomicU16>,
+    first_receiver: Arc<Mutex<Option<broadcast::Receiver<LogServerEvent>>>>,
 }
 
 impl LogServerState {
-    fn new(log_sender: broadcast::Sender<LogServerEvent>) -> Self {
+    fn new(
+        log_sender: broadcast::Sender<LogServerEvent>,
+        log_receiver: broadcast::Receiver<LogServerEvent>,
+    ) -> Self {
         Self {
+            first_receiver: Arc::new(Mutex::new(Some(log_receiver))),
             log_sender,
             port_serial: Arc::new(3001.into()),
         }
@@ -144,13 +149,14 @@ impl LogServerState {
 pub(crate) async fn start_log_server(
     handle: axum_server::Handle,
     log_sender: broadcast::Sender<LogServerEvent>,
+    log_receiver: broadcast::Receiver<LogServerEvent>,
 ) {
     let app = Router::new()
         .route("/", get(async || Html(include_str!("log_server.html"))))
         .route("/ping", get(async || "pong"))
         .route("/new_instance", get(new_instance))
         .route("/ws", get(log_ws))
-        .with_state(LogServerState::new(log_sender));
+        .with_state(LogServerState::new(log_sender, log_receiver));
 
     let socket_addr = if let Ok(response) = reqwest::get("http://localhost:3000/new_instance")
         .and_then(|resp| resp.text())
@@ -193,7 +199,13 @@ async fn log_ws(
     State(log_server_state): State<LogServerState>,
     ws: WebSocketUpgrade,
 ) -> axum::response::Response {
-    ws.on_upgrade(move |ws| handle_socket(ws, log_server_state.log_sender.subscribe()))
+    let log_event_receiver = log_server_state
+        .first_receiver
+        .lock()
+        .await
+        .take()
+        .unwrap_or_else(|| log_server_state.log_sender.subscribe());
+    ws.on_upgrade(move |ws| handle_socket(ws, log_event_receiver))
 }
 
 async fn handle_socket(
