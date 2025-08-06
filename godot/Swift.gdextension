@@ -12,3 +12,14 @@ macos.debug =            "res://../swift/.build/x86_64-apple-macosx/debug/libfna
 macos.release =          "res://../swift/.build/x86_64-apple-macosx/debug/libfnaf.dylib"
 macos.debug.arm64 =      "res://../swift/.build/arm64-apple-macosx/debug/libfnaf.dylib"
 macos.release.arm64 =    "res://../swift/.build/arm64-apple-macosx/release/libfnaf.dylib"
+
+[dependencies]
+linux.debug.x86_64 =     {"res://../swift/.build/x86_64-unknown-linux-gnu/debug/libSwiftGodot.so": ""}
+linux.release.x86_64 =   {"res://../swift/.build/x86_64-unknown-linux-gnu/release/libSwiftGodot.so": ""}
+windows.debug.x86_64 =   {"res://../swift/.build/x86_64-pc-windows/debug/libSwiftGodot.dll": ""}
+windows.release.x86_64 = {"res://../swift/.build/x86_64-pc-windows/release/libSwiftGodot.dll": ""}
+macos.debug =            {"res://../swift/.build/x86_64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.release =          {"res://../swift/.build/x86_64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.debug.arm64 =      {"res://../swift/.build/arm64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.release.arm64 =    {"res://../swift/.build/arm64-apple-macosx/release/libSwiftGodot.dylib": ""}
+
