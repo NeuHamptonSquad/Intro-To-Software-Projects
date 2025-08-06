@@ -13,5 +13,6 @@ config_version=5
 config/name="FNAF 5: Double Vision"
 run/main_scene="uid://w0f4v5xkeiwu"
 run/disable_stdout=true
+run/disable_stderr=true
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
