@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    io::{ErrorKind, Write},
+    io::{ErrorKind, LineWriter, Write},
     mem::ManuallyDrop,
     sync::{Arc, atomic::AtomicU16},
     thread::JoinHandle,
@@ -22,6 +22,7 @@ use godot::{classes::Object, prelude::*};
 use tokio::sync::{Mutex, broadcast};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing::{Level, dispatcher, span};
+use tracing_subscriber::fmt::MakeWriter;
 
 use crate::LOG_SERVER;
 
@@ -99,12 +100,35 @@ pub(crate) enum LogServerEvent {
     NewInstance(u16),
 }
 
-pub(crate) struct LogServerWriter;
+pub(crate) struct LogServerMakeWriter;
+
+impl<'a> MakeWriter<'a> for LogServerMakeWriter {
+    type Writer = LineWriter<LogServerWriter>;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        LineWriter::new(LogServerWriter(Level::INFO))
+    }
+
+    fn make_writer_for(&'a self, meta: &tracing::Metadata<'_>) -> Self::Writer {
+        LineWriter::new(LogServerWriter(*meta.level()))
+    }
+}
+
+pub(crate) struct LogServerWriter(Level);
 
 impl Write for LogServerWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let buf =
             std::str::from_utf8(buf).map_err(|e| std::io::Error::new(ErrorKind::InvalidData, e))?;
+        match self.0 {
+            Level::ERROR => {
+                godot::global::push_error(&[Variant::from(strip_ansi::strip_ansi(buf))])
+            }
+            Level::WARN => {
+                godot::global::push_warning(&[Variant::from(strip_ansi::strip_ansi(buf))])
+            }
+            _ => {}
+        }
         if let Some(log_server) = LOG_SERVER.get() {
             let _ = log_server.log_sender.send(LogServerEvent::Log(buf.into()));
         }

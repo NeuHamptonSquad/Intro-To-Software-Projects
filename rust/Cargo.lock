@@ -33,6 +33,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
+name = "ansi-regex"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74e74db1232b47053a58c3b009baf5d07cdb83354058af912eb6a30745c29081"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "ansi-to-html"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,6 +390,7 @@ dependencies = [
  "godot",
  "ratatui",
  "reqwest",
+ "strip-ansi",
  "tokio",
  "tower-http",
  "tracing",
@@ -1452,6 +1462,15 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "strip-ansi"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e397af0b9266a4e521ed5a4891cc715902af8dd221cba1a187f552bd044d970"
+dependencies = [
+ "ansi-regex",
+]
 
 [[package]]
 name = "strsim"

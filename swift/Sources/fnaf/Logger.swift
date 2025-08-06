@@ -18,13 +18,37 @@ class Logger {
     return Logger()
   }
 
+  public static func error(log: String) {
+    if Logger.shared.logger != nil {
+      Logger.shared.logger?.call(method: "error", Variant.init(log))
+    }
+  }
+
+  public static func warn(log: String) {
+    if Logger.shared.logger != nil {
+      Logger.shared.logger?.call(method: "warn", Variant.init(log))
+    }
+  }
+
   public static func info(log: String) {
     if Logger.shared.logger != nil {
       Logger.shared.logger?.call(method: "info", Variant.init(log))
     }
   }
 
-  public static func enter_span(location: String, args: String) -> Int? {
+  public static func debug(log: String) {
+    if Logger.shared.logger != nil {
+      Logger.shared.logger?.call(method: "debug", Variant.init(log))
+    }
+  }
+
+  public static func trace(log: String) {
+    if Logger.shared.logger != nil {
+      Logger.shared.logger?.call(method: "trace", Variant.init(log))
+    }
+  }
+
+  public static func span(location: String, args: String) -> Int? {
     if Logger.shared.logger != nil {
       let id = Logger.shared.logger?.call(
         method: "span", Variant.init(location), Variant.init(args))
