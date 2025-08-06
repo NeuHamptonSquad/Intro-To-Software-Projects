@@ -16,6 +16,7 @@ godot = { version = "0.3.4", features = ["api-4-4"] }
 ratatui = "0.29.0"
 reqwest = { version = "0.12.22", default-features = false }
 tokio = { version = "1.47.1", features = ["rt", "macros"] }
+tower-http = { version = "0.6.6", features = ["cors"] }
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

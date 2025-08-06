@@ -13,12 +13,14 @@ use axum::{
         State, WebSocketUpgrade,
         ws::{self, WebSocket},
     },
+    http::{HeaderValue, Method},
     response::Html,
     routing::get,
 };
 use futures_util::TryFutureExt;
 use godot::{classes::Object, prelude::*};
 use tokio::sync::{Mutex, broadcast};
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing::{Level, dispatcher, span};
 
 use crate::LOG_SERVER;
@@ -182,6 +184,13 @@ pub(crate) async fn start_log_server(
         .route("/ping", get(async || "pong"))
         .route("/new_instance", get(new_instance))
         .route("/ws", get(log_ws))
+        .layer(
+            CorsLayer::new()
+                .allow_methods([Method::GET])
+                .allow_origin(AllowOrigin::exact(HeaderValue::from_static(
+                    "http://localhost:8000",
+                ))),
+        )
         .with_state(LogServerState::new(log_sender, log_receiver));
 
     let socket_addr = if let Ok(response) = reqwest::get("http://localhost:8000/new_instance")
