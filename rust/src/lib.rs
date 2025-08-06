@@ -22,40 +22,32 @@ unsafe impl ExtensionLibrary for FnafDoubleVisionExtension {
     fn on_level_init(level: InitLevel) {
         match level {
             InitLevel::Core => {
-                if LOG_SERVER.get().is_none() {
-                    color_eyre::config::HookBuilder::new()
-                        .theme(color_eyre::config::Theme::default())
-                        .install()
-                        .unwrap();
+                color_eyre::config::HookBuilder::new()
+                    .theme(color_eyre::config::Theme::default())
+                    .install()
+                    .unwrap();
 
-                    let log_server = tracing_godot::LogServer::new();
-                    LOG_SERVER.set(log_server).unwrap();
+                let log_server = tracing_godot::LogServer::new();
+                LOG_SERVER.set(log_server).unwrap();
 
-                    tracing_subscriber::registry()
-                        .with(ErrorLayer::default())
-                        .with(
-                            EnvFilter::try_from_default_env()
-                                .or_else(|_| EnvFilter::try_new("info"))
-                                .unwrap(),
-                        )
-                        .with(
-                            tracing_subscriber::fmt::layer()
-                                .with_writer(|| LineWriter::new(tracing_godot::LogServerWriter)),
-                        )
-                        .init();
-                }
+                tracing_subscriber::registry()
+                    .with(ErrorLayer::default())
+                    .with(
+                        EnvFilter::try_from_default_env()
+                            .or_else(|_| EnvFilter::try_new("info"))
+                            .unwrap(),
+                    )
+                    .with(
+                        tracing_subscriber::fmt::layer()
+                            .with_writer(|| LineWriter::new(tracing_godot::LogServerWriter)),
+                    )
+                    .init();
             }
             InitLevel::Scene => {
                 Engine::singleton().register_singleton(
                     &Logger::class_name().to_string_name(),
                     &Logger::new_alloc(),
                 );
-            }
-            InitLevel::Editor => {
-                // The server should not run when the game isn't
-                if let Some(log_server) = LOG_SERVER.get() {
-                    // log_server.join();
-                }
             }
             _ => {}
         }

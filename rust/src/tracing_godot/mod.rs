@@ -182,8 +182,8 @@ async fn new_instance(State(log_server_state): State<LogServerState>) -> String 
     let new_instance_port = log_server_state
         .port_serial
         .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-    // You cannot spawn 1000 instances of the game
-    // simultaniously. Cope, seath, cry about it.
+    // You cannot simultaniously spawn 1000 instances of the game.
+    // Cope, seath, cry about it.
     if new_instance_port == 3999 {
         log_server_state
             .port_serial
