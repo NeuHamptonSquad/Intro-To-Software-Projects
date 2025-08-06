@@ -214,23 +214,31 @@ async fn handle_socket(
 ) {
     loop {
         tokio::select! {
-             log_event = log_event_receiver.recv() => {
-                let Ok(log_event) = log_event else {
-                    return;
-                };
+            log_event = log_event_receiver.recv() => {
                 match log_event {
-                    LogServerEvent::Log(log) => {
-                        let html = ansi_to_html::convert(&log).unwrap();
-                        if let Err(_) = socket.send(ws::Message::Text(html.into())).await {
+                    Ok(log_event) => {
+                        match log_event {
+                            LogServerEvent::Log(log) => {
+                                let html = ansi_to_html::convert(&log).unwrap();
+                                if let Err(_) = socket.send(ws::Message::Text(html.into())).await {
+                                    return;
+                                };
+                            }
+                            LogServerEvent::NewInstance(port) => {
+                                let port = port.to_le_bytes();
+                                if let Err(_) = socket.send(ws::Message::Binary(Bytes::from_owner(port))).await {
+                                    return;
+                                };
+                            }
+                        }
+                    }
+                    Err(broadcast::error::RecvError::Lagged(missed_logs)) => {
+                        let missed_log_message = format!("Uh oh, you missed {} logs", missed_logs);
+                        if let Err(_) = socket.send(ws::Message::Text(missed_log_message.into())).await {
                             return;
                         };
                     }
-                    LogServerEvent::NewInstance(port) => {
-                        let port = port.to_le_bytes();
-                        if let Err(_) = socket.send(ws::Message::Binary(Bytes::from_owner(port))).await {
-                            return;
-                        };
-                    }
+                    Err(broadcast::error::RecvError::Closed) => return,
                 }
             }
             msg = socket.recv() => {
