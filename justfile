@@ -1,3 +1,5 @@
+set windows-shell := ["cmd.exe", "/c"]
+
 build: build-rust build-swift
 
 build-rust:
