@@ -1,8 +1,5 @@
-[gd_scene load_steps=2 format=3 uid="uid://w0f4v5xkeiwu"]
+[gd_scene format=3 uid="uid://w0f4v5xkeiwu"]
 
-[ext_resource type="Script" uid="uid://dfrt62xnhtcdm" path="res://scenes/test.gd" id="1_errlg"]
-
-[node name="Node3D" type="Node3D"]
-script = ExtResource("1_errlg")
+[node name="Node3D" type="LoggingNode"]
 
 [node name="Terminal" type="Terminal" parent="."]

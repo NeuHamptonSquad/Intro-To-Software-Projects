@@ -3,4 +3,4 @@
 
 import SwiftGodot
 
-#initSwiftExtension(cdecl: "swift_entry_point", types: [])
+#initSwiftExtension(cdecl: "swift_entry_point", types: [LoggingNode.self])
