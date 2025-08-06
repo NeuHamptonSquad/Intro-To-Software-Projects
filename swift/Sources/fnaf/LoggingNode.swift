@@ -8,9 +8,9 @@ import SwiftGodot
 
 @Godot
 class LoggingNode: Node3D {
-	override func _ready() {
-		let span = Logger.enter_span(location: "LogggingNode::ready", args: "")
-		Logger.info(log: "Hello from Swift!")
-		Logger.exit_span(span: span)
-	}
+  override func _ready() {
+    let span = Logger.enter_span(location: "LogggingNode::ready", args: "")
+    Logger.info(log: "Hello from Swift!")
+    Logger.exit_span(span: span)
+  }
 }
