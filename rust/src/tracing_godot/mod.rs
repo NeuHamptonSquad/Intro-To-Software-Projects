@@ -70,12 +70,11 @@ impl Logger {
     }
     #[func]
     pub fn span(&mut self, location: GString, varargs: GString) -> u64 {
-        let location = format!("{}", location);
         let entered = ManuallyDrop::new(
             tracing::span!(
                 Level::INFO,
                 "godot",
-                location,
+                location = %location,
                 args = %varargs
             )
             .entered(),
