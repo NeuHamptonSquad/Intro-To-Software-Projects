@@ -1,6 +1,7 @@
 use std::{
     fmt::Debug,
     io::{ErrorKind, Write},
+    mem::ManuallyDrop,
     sync::{Arc, atomic::AtomicU16},
     thread::JoinHandle,
 };
@@ -18,6 +19,7 @@ use axum::{
 use futures_util::TryFutureExt;
 use godot::{classes::Object, prelude::*};
 use tokio::sync::{Mutex, broadcast};
+use tracing::{Level, dispatcher, span};
 
 use crate::LOG_SERVER;
 
@@ -63,6 +65,30 @@ impl Logger {
             target: "godot",
             "{}", varargs
         );
+    }
+    #[func]
+    pub fn span(&mut self, location: GString, varargs: GString) -> u64 {
+        let location = format!("{}", location);
+        let entered = ManuallyDrop::new(
+            tracing::span!(
+                Level::INFO,
+                "godot",
+                location,
+                args = %varargs
+            )
+            .entered(),
+        );
+        entered.id().unwrap().into_u64()
+    }
+    #[func]
+    pub fn exit_span(&mut self, span: u64) {
+        dispatcher::get_default(|dispatcher| {
+            let span_id = span::Id::from_u64(span);
+            dispatcher.exit(&span_id);
+            if !dispatcher.try_close(span_id) {
+                tracing::warn!("Failed to close godot span");
+            }
+        });
     }
 }
 
@@ -140,7 +166,7 @@ impl LogServerState {
         Self {
             first_receiver: Arc::new(Mutex::new(Some(log_receiver))),
             log_sender,
-            port_serial: Arc::new(3001.into()),
+            port_serial: Arc::new(8001.into()),
         }
     }
 }
@@ -158,7 +184,7 @@ pub(crate) async fn start_log_server(
         .route("/ws", get(log_ws))
         .with_state(LogServerState::new(log_sender, log_receiver));
 
-    let socket_addr = if let Ok(response) = reqwest::get("http://localhost:3000/new_instance")
+    let socket_addr = if let Ok(response) = reqwest::get("http://localhost:8000/new_instance")
         .and_then(|resp| resp.text())
         .await
     {
@@ -168,7 +194,7 @@ pub(crate) async fn start_log_server(
         ([127, 0, 0, 1], port).into()
     } else {
         // We are the main server
-        ([127, 0, 0, 1], 3000).into()
+        ([127, 0, 0, 1], 8000).into()
     };
 
     axum_server::bind(socket_addr)
@@ -184,10 +210,10 @@ async fn new_instance(State(log_server_state): State<LogServerState>) -> String 
         .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     // You cannot simultaniously spawn 1000 instances of the game.
     // Cope, seath, cry about it.
-    if new_instance_port == 3999 {
+    if new_instance_port == 8999 {
         log_server_state
             .port_serial
-            .store(3001, std::sync::atomic::Ordering::Release);
+            .store(8001, std::sync::atomic::Ordering::Release);
     }
     let _ = log_server_state
         .log_sender

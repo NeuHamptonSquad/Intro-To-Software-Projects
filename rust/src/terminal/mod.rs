@@ -258,8 +258,9 @@ impl INode for Terminal {
 }
 
 impl Terminal {
+    #[instrument(skip(self))]
     fn event(&mut self, event: crossterm::event::Event) {
-        tracing::debug!(event = ?event, "New Event");
+        tracing::debug!("New Event");
         self.latest_event = event;
     }
 }
