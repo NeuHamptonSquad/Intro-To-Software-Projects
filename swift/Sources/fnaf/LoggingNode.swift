@@ -11,7 +11,6 @@ class LoggingNode: Node3D {
   override func _ready() {
     let span = Logger.span(location: "LogggingNode::ready", args: "")
     Logger.info(log: "Hello from Swift!")
-    Logger.warn(log: "Hello from Swift!")
     Logger.exit_span(span: span)
   }
 }
