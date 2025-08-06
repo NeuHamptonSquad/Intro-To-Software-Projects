@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <style>
+    :root {
+      --black: #01060E;
+      --red: #EA6C73;
+      --green: #91B362;
+      --yellow: #F9AF4F;
+      --blue: #53BDFA;
+      --magenta: #FAE994;
+      --cyan: #90E1C6;
+      --white: #C7C7C7;
+      --bright-black: #686868;
+      --bright-red: #F07178;
+      --bright-green: #C2D94C;
+      --bright-yellow: #FFB454;
+      --bright-blue: #59C2FF;
+      --bright-magenta: #FFEE99;
+      --bright-cyan: #95E6CB;
+      --bright-white: #FFFFFF;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: #0F1419;
+    }
+
+    #log * {
+      overflow-anchor: none;
+    }
+
+    #anchor {
+      overflow-anchor: auto;
+      height: 1px;
+    }
+
+    p {
+      font-family: monospace;
+      font-size: 12px;
+      word-wrap: break-word;
+      margin: 0px;
+      color: #B3B1AD;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="log">
+    <div id="anchor"></div>
+  </div>
+</body>
+
+<script>
+  let log = document.getElementById('log');
+  let anchor = document.getElementById('anchor');
+  let openSockets = 0;
+  createSocket(8000);
+  function createSocket(socketPort) {
+    let attempts = 0;
+    const socketConnectInterval = setInterval(async () => {
+      attempts += 1;
+      try {
+        const ping = await fetch(`http://localhost:${socketPort}/ping`);
+        const pingResult = await ping.text();
+        if (pingResult === "pong") {
+          clearInterval(socketConnectInterval);
+          const socket = new WebSocket(`ws://localhost:${socketPort}/ws`);
+          socket.addEventListener("message", async (event) => {
+            if (typeof event.data === "string") {
+              let newLog = document.createElement('p');
+              newLog.innerHTML = event.data;
+              log.insertBefore(newLog, anchor);
+            } else {
+              const dataView = new DataView(await event.data.arrayBuffer());
+              const port = dataView.getUint16(0, true);
+              console.log(`Connecting to port ${port}`);
+              createSocket(port)
+            }
+          });
+          let heartbeatInterval;
+          socket.addEventListener("open", (event) => {
+            openSockets += 1;
+            heartbeatInterval = setInterval(() => {
+              socket.send("ping");
+            }, 1000);
+          });
+          socket.addEventListener("error", onError);
+          socket.addEventListener("close", onError);
+          function onError(event) {
+            clearInterval(heartbeatInterval);
+            openSockets -= 1;
+            let newSeparator = document.createElement('hr');
+            log.insertBefore(newSeparator, anchor);
+            if (openSockets == 0) {
+              setInterval(async () => {
+                // We want to reconnect to the master
+                const ping = await fetch(`http://localhost:8000/ping`);
+                const pingResult = await ping.text();
+                if (pingResult === "pong") {
+                  window.location.reload();
+                }
+              }, 1000);
+            }
+          }
+        } else {
+          throw new Error("Incorrect response");
+        }
+      } catch (e) {
+        if (attempts == 3) {
+          clearInterval(socketConnectInterval);
+        }
+      }
+    }, 1000);
+  }
+</script>
+
+</html>

@@ -1,0 +1,25 @@
+[configuration]
+entry_symbol = "swift_entry_point"
+compatibility_minimum = 4.4
+reloadable = true
+
+[libraries]
+linux.debug.x86_64 =     "res://../swift/.build/x86_64-unknown-linux-gnu/debug/libfnaf.so"
+linux.release.x86_64 =   "res://../swift/.build/x86_64-unknown-linux-gnu/release/libfnaf.so"
+windows.debug.x86_64 =   "res://../swift/.build/x86_64-pc-windows/debug/libfnaf.dll"
+windows.release.x86_64 = "res://../swift/.build/x86_64-pc-windows/release/libfnaf.dll"
+macos.debug =            "res://../swift/.build/x86_64-apple-macosx/debug/libfnaf.dylib"
+macos.release =          "res://../swift/.build/x86_64-apple-macosx/debug/libfnaf.dylib"
+macos.debug.arm64 =      "res://../swift/.build/arm64-apple-macosx/debug/libfnaf.dylib"
+macos.release.arm64 =    "res://../swift/.build/arm64-apple-macosx/release/libfnaf.dylib"
+
+[dependencies]
+linux.debug.x86_64 =     {"res://../swift/.build/x86_64-unknown-linux-gnu/debug/libSwiftGodot.so": ""}
+linux.release.x86_64 =   {"res://../swift/.build/x86_64-unknown-linux-gnu/release/libSwiftGodot.so": ""}
+windows.debug.x86_64 =   {"res://../swift/.build/x86_64-pc-windows/debug/libSwiftGodot.dll": ""}
+windows.release.x86_64 = {"res://../swift/.build/x86_64-pc-windows/release/libSwiftGodot.dll": ""}
+macos.debug =            {"res://../swift/.build/x86_64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.release =          {"res://../swift/.build/x86_64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.debug.arm64 =      {"res://../swift/.build/arm64-apple-macosx/debug/libSwiftGodot.dylib": ""}
+macos.release.arm64 =    {"res://../swift/.build/arm64-apple-macosx/release/libSwiftGodot.dylib": ""}
+
