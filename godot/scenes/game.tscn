@@ -401,3 +401,6 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 
 radius = 1.001
 height = 1.53076
 sides = 26
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.325189, 0, 0.945649, 0, 1, 0, -0.945649, 0, 0.325189, 1.31001, 3.98963, 13.6931)
