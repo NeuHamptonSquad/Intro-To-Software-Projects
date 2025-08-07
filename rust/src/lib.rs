@@ -1,4 +1,4 @@
-use std::{io::LineWriter, sync::OnceLock};
+use std::sync::OnceLock;
 
 use godot::{
     classes::{Engine, class_macros::sys::InitLevel},
@@ -39,7 +39,7 @@ unsafe impl ExtensionLibrary for FnafDoubleVisionExtension {
                     )
                     .with(
                         tracing_subscriber::fmt::layer()
-                            .with_writer(|| LineWriter::new(tracing_godot::LogServerWriter)),
+                            .with_writer(tracing_godot::LogServerMakeWriter),
                     )
                     .init();
             }
