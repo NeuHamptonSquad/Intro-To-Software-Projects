@@ -63,11 +63,7 @@ impl ITileMapLayer for TerminalTileMapLayer {
                 .cell_mut((coordinate.x as u16, coordinate.y as u16))
             {
                 let cell_atlas_x = base.get_cell_atlas_coords(coordinate).x as usize;
-                if let Some(symbol) = TILESET.get(cell_atlas_x) {
-                    cell.set_symbol(symbol);
-                } else {
-                    cell.set_symbol(" ");
-                }
+                cell.set_symbol(TILESET.get(cell_atlas_x).unwrap_or(&" "));
                 cell.set_style(layer_style);
             }
         }
