@@ -1,7 +1,7 @@
-use std::{io::stdout, time::Duration};
+use std::{io::stdout, ops::Deref, time::Duration};
 
 use godot::{
-    classes::{InputEvent, InputEventKey, TileMap},
+    classes::{ITileMapLayer, InputEvent, InputEventKey, TileMapLayer},
     prelude::*,
 };
 use ratatui::{
@@ -26,22 +26,101 @@ const TILESET: [&'static str; 28] = [
     "┛", "┏", "┓", "┣", "┫", "┳", "┻", "╋", "▉",
 ];
 
-struct TerminalTileMap(pub Buffer);
+#[derive(GodotClass)]
+#[class(base=TileMapLayer)]
+struct TerminalTileMapLayer {
+    base: Base<TileMapLayer>,
+    buffer: Buffer,
+}
 
-impl TerminalTileMap {
-    fn new(buffer: Buffer) -> Self {
-        Self(buffer)
+#[godot_api]
+impl ITileMapLayer for TerminalTileMapLayer {
+    fn init(base: Base<TileMapLayer>) -> Self {
+        Self {
+            base,
+            buffer: Buffer::empty(Rect::new(0, 0, 1, 1)),
+        }
     }
 
-    fn apply_layer(&mut self, tilemap: &TileMap, layer: i32, layer_style: Style) {
-        let tiles = tilemap.get_used_cells(layer);
+    fn update_cells(&mut self, mut tiles: Array<Vector2i>, forced_cleanup: bool) {
+        let base = self.base().clone();
+        let used_rect = base.get_used_rect();
+        let used_rect = Rect::new(
+            used_rect.position.x as u16,
+            used_rect.position.y as u16,
+            used_rect.size.x as u16,
+            used_rect.size.y as u16,
+        );
+        if forced_cleanup || used_rect != self.buffer.area {
+            self.buffer = Buffer::empty(used_rect);
+            tiles = base.get_used_cells();
+        }
+        let modulate = base.get_modulate();
+        let layer_style = Style::new().fg(Color::Rgb(modulate.r8(), modulate.g8(), modulate.b8()));
         for coordinate in tiles.iter_shared() {
-            if let Some(cell) = self.0.cell_mut((coordinate.x as u16, coordinate.y as u16)) {
-                let cell_atlas_x = tilemap.get_cell_atlas_coords(layer, coordinate).x as usize;
-                cell.set_symbol(TILESET[cell_atlas_x]);
+            if let Some(cell) = self
+                .buffer
+                .cell_mut((coordinate.x as u16, coordinate.y as u16))
+            {
+                let cell_atlas_x = base.get_cell_atlas_coords(coordinate).x as usize;
+                if let Some(symbol) = TILESET.get(cell_atlas_x) {
+                    cell.set_symbol(symbol);
+                } else {
+                    cell.set_symbol(" ");
+                }
                 cell.set_style(layer_style);
             }
         }
+    }
+}
+
+impl TerminalTileMapLayer {
+    fn render(&self, mut area: Rect, buf: &mut Buffer)
+    where
+        Self: Sized,
+    {
+        let tilemap_line_iterator = self.buffer.content.chunks(self.buffer.area.width as usize);
+        area.x += self.buffer.area.x;
+        area.y += self.buffer.area.y;
+        area.width = self.buffer.area.width;
+        area.height = self.buffer.area.height;
+        for (y, line) in (area.y..area.bottom()).zip(tilemap_line_iterator) {
+            let line_start = buf.index_of(area.x, y);
+            let target_line = &mut buf.content[line_start..line_start + line.len()];
+
+            target_line
+                .iter_mut()
+                .zip(line.iter())
+                .filter(|(_, line_cell)| line_cell.symbol() != " ")
+                .for_each(|(target_cell, line_cell)| *target_cell = line_cell.clone());
+        }
+    }
+}
+
+#[derive(GodotClass)]
+#[class(base=Node)]
+pub struct TerminalTileMap {
+    base: Base<Node>,
+    layers: Vec<Gd<TerminalTileMapLayer>>,
+}
+
+#[godot_api]
+impl INode for TerminalTileMap {
+    fn init(base: Base<Node>) -> Self {
+        Self {
+            base,
+            layers: Vec::new(),
+        }
+    }
+
+    fn ready(&mut self) {
+        self.layers.clear();
+        self.layers.extend(
+            self.base()
+                .get_children()
+                .iter_shared()
+                .flat_map(|node| node.try_cast::<TerminalTileMapLayer>()),
+        );
     }
 }
 
@@ -50,12 +129,8 @@ impl Widget for &TerminalTileMap {
     where
         Self: Sized,
     {
-        let tilemap_line_iterator = self.0.content.chunks(self.0.area.width as usize);
-        for (y, line) in (area.y..area.bottom()).zip(tilemap_line_iterator) {
-            let line_start = buf.index_of(area.x, y);
-            let target_line = &mut buf.content[line_start..line_start + line.len()];
-
-            target_line.clone_from_slice(line);
+        for layer in &self.layers {
+            layer.bind().render(area, buf)
         }
     }
 }
@@ -66,7 +141,7 @@ impl Widget for &TerminalTileMap {
 /// of this game.
 pub struct Terminal {
     base: Base<Node>,
-    tile_map: Option<TerminalTileMap>,
+    tile_map: Option<Gd<TerminalTileMap>>,
     terminal: DefaultTerminal,
     latest_event: crossterm::event::Event,
 }
@@ -86,23 +161,7 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn ready(&mut self) {
         self.terminal = ratatui::init();
-        self.tile_map = self
-            .base()
-            .try_get_node_as::<TileMap>("TileMap")
-            .map(|tile_map| {
-                let area = tile_map.get_used_rect();
-                let mut terminal_tile_map = TerminalTileMap::new(Buffer::empty(Rect::new(
-                    area.position.x as u16,
-                    area.position.y as u16,
-                    area.size.x as u16,
-                    area.size.y as u16,
-                )));
-
-                terminal_tile_map.apply_layer(&tile_map, 0, Style::new());
-                terminal_tile_map.apply_layer(&tile_map, 1, Style::new().fg(Color::Red));
-
-                terminal_tile_map
-            });
+        self.tile_map = self.base().try_get_node_as("TileMap");
     }
 
     #[instrument(skip_all)]
@@ -132,7 +191,7 @@ impl INode for Terminal {
                 )
                 .split(frame.area());
                 if let Some(tile_map) = &self.tile_map {
-                    frame.render_widget(tile_map, layout[1]);
+                    frame.render_widget(tile_map.bind().deref(), layout[1]);
                 }
             })
             .unwrap();
