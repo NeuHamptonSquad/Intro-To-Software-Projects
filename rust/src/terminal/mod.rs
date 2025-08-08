@@ -35,6 +35,7 @@ struct TerminalTileMapLayer {
 
 #[godot_api]
 impl ITileMapLayer for TerminalTileMapLayer {
+    #[instrument(skip_all)]
     fn init(base: Base<TileMapLayer>) -> Self {
         Self {
             base,
@@ -42,6 +43,7 @@ impl ITileMapLayer for TerminalTileMapLayer {
         }
     }
 
+    #[instrument(skip(self, tiles))]
     fn update_cells(&mut self, mut tiles: Array<Vector2i>, forced_cleanup: bool) {
         let base = self.base().clone();
         let used_rect = base.get_used_rect();
@@ -71,6 +73,7 @@ impl ITileMapLayer for TerminalTileMapLayer {
 }
 
 impl TerminalTileMapLayer {
+    #[instrument(skip_all)]
     fn render(&self, mut area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
@@ -78,8 +81,12 @@ impl TerminalTileMapLayer {
         let tilemap_line_iterator = self.buffer.content.chunks(self.buffer.area.width as usize);
         area.x += self.buffer.area.x;
         area.y += self.buffer.area.y;
-        area.width = self.buffer.area.width;
-        area.height = self.buffer.area.height;
+        area.width = self.buffer.area.width.min(area.width - self.buffer.area.x);
+        area.height = self
+            .buffer
+            .area
+            .height
+            .min(area.height - self.buffer.area.y);
         for (y, line) in (area.y..area.bottom()).zip(tilemap_line_iterator) {
             let line_start = buf.index_of(area.x, y);
             let target_line = &mut buf.content[line_start..line_start + line.len()];
@@ -102,6 +109,7 @@ pub struct TerminalTileMap {
 
 #[godot_api]
 impl INode for TerminalTileMap {
+    #[instrument(skip_all)]
     fn init(base: Base<Node>) -> Self {
         Self {
             base,
@@ -109,6 +117,7 @@ impl INode for TerminalTileMap {
         }
     }
 
+    #[instrument(skip_all)]
     fn ready(&mut self) {
         self.layers.clear();
         self.layers.extend(
@@ -120,7 +129,17 @@ impl INode for TerminalTileMap {
     }
 }
 
+impl TerminalTileMap {
+    #[instrument(skip_all)]
+    fn get_used_rect(&self) -> Rect {
+        self.layers.iter().fold(Rect::ZERO, |rect, layer| {
+            rect.union(layer.bind().buffer.area)
+        })
+    }
+}
+
 impl Widget for &TerminalTileMap {
+    #[instrument(skip_all)]
     fn render(self, area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
@@ -187,12 +206,19 @@ impl INode for Terminal {
                 )
                 .split(frame.area());
                 if let Some(tile_map) = &self.tile_map {
-                    frame.render_widget(tile_map.bind().deref(), layout[1]);
+                    let tile_map = tile_map.bind();
+                    let used_rect = tile_map.get_used_rect();
+                    let center =
+                        Layout::new(Direction::Horizontal, [Constraint::Length(used_rect.width)])
+                            .flex(ratatui::layout::Flex::Center)
+                            .split(layout[1]);
+                    frame.render_widget(tile_map.deref(), center[0]);
                 }
             })
             .unwrap();
     }
 
+    #[instrument(skip(self))]
     fn input(&mut self, input: Gd<InputEvent>) {
         if let Ok(input_event_key) = input.try_cast::<InputEventKey>() {
             let code = match input_event_key.get_keycode() {
