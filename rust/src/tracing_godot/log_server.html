@@ -43,11 +43,11 @@
       height: 1px;
     }
 
-    p {
+    pre {
       font-family: monospace;
       font-size: 12px;
       word-wrap: break-word;
-      margin: 0px;
+      margin: 8px;
       color: #B3B1AD;
     }
   </style>
@@ -76,7 +76,7 @@
           const socket = new WebSocket(`ws://localhost:${socketPort}/ws`);
           socket.addEventListener("message", async (event) => {
             if (typeof event.data === "string") {
-              let newLog = document.createElement('p');
+              let newLog = document.createElement('pre');
               newLog.innerHTML = event.data;
               log.insertBefore(newLog, anchor);
             } else {

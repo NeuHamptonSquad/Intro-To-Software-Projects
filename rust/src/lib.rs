@@ -22,7 +22,15 @@ unsafe impl ExtensionLibrary for FnafDoubleVisionExtension {
     fn on_level_init(level: InitLevel) {
         match level {
             InitLevel::Core => {
-                color_eyre::install().unwrap();
+                let (panic_hook, eyre_hook) = color_eyre::config::HookBuilder::new().into_hooks();
+                std::panic::set_hook(Box::new(move |panic_info| {
+                    if let Some(log_server) = LOG_SERVER.get() {
+                        log_server.send(tracing_godot::LogServerEvent::Log(
+                            format!("{}", panic_hook.panic_report(panic_info)).into(),
+                        ));
+                    }
+                }));
+                eyre_hook.install().unwrap();
 
                 let log_server = tracing_godot::LogServer::new();
                 LOG_SERVER.set(log_server).unwrap();

@@ -130,7 +130,7 @@ impl Write for LogServerWriter {
             _ => {}
         }
         if let Some(log_server) = LOG_SERVER.get() {
-            let _ = log_server.log_sender.send(LogServerEvent::Log(buf.into()));
+            log_server.send(LogServerEvent::Log(buf.into()));
         }
         Ok(buf.len())
     }
@@ -173,6 +173,10 @@ impl LogServer {
         while !self.join_handle.is_finished() {
             std::hint::spin_loop();
         }
+    }
+
+    pub(crate) fn send(&self, event: LogServerEvent) {
+        let _ = self.log_sender.send(event);
     }
 }
 
