@@ -16,3 +16,7 @@ run/disable_stdout=true
 run/disable_stderr=true
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
