@@ -1,11 +1,12 @@
 use std::{io::stdout, time::Duration};
 
 use godot::{
-    classes::{InputEvent, InputEventKey},
+    classes::{InputEvent, InputEventKey, TileMap},
     prelude::*,
 };
 use ratatui::{
     DefaultTerminal,
+    buffer::Buffer,
     crossterm::{
         self,
         event::{
@@ -13,10 +14,51 @@ use ratatui::{
             ModifierKeyCode,
         },
     },
+    layout::{Constraint, Direction, Layout, Rect},
     prelude::CrosstermBackend,
-    widgets::{Block, Borders, Paragraph, Wrap},
+    style::{Color, Style},
+    widgets::{Block, Borders, Paragraph, Widget, Wrap},
 };
 use tracing::instrument;
+
+const TILESET: [&'static str; 28] = [
+    "#", "|", "─", "└", "─", "┘", "┌", "┐", "│", "├", "┤", "┬", "┴", "┼", "░", "▉", "┃", "━", "┗",
+    "┛", "┏", "┓", "┣", "┫", "┳", "┻", "╋", "▉",
+];
+
+struct TerminalTileMap(pub Buffer);
+
+impl TerminalTileMap {
+    fn new(buffer: Buffer) -> Self {
+        Self(buffer)
+    }
+
+    fn apply_layer(&mut self, tilemap: &TileMap, layer: i32, layer_style: Style) {
+        let tiles = tilemap.get_used_cells(layer);
+        for coordinate in tiles.iter_shared() {
+            if let Some(cell) = self.0.cell_mut((coordinate.x as u16, coordinate.y as u16)) {
+                let cell_atlas_x = tilemap.get_cell_atlas_coords(layer, coordinate).x as usize;
+                cell.set_symbol(TILESET[cell_atlas_x]);
+                cell.set_style(layer_style);
+            }
+        }
+    }
+}
+
+impl Widget for &TerminalTileMap {
+    fn render(self, area: Rect, buf: &mut Buffer)
+    where
+        Self: Sized,
+    {
+        let tilemap_line_iterator = self.0.content.chunks(self.0.area.width as usize);
+        for (y, line) in (area.y..area.bottom()).zip(tilemap_line_iterator) {
+            let line_start = buf.index_of(area.x, y);
+            let target_line = &mut buf.content[line_start..line_start + line.len()];
+
+            target_line.clone_from_slice(line);
+        }
+    }
+}
 
 #[derive(GodotClass)]
 #[class(base=Node)]
@@ -24,6 +66,7 @@ use tracing::instrument;
 /// of this game.
 pub struct Terminal {
     base: Base<Node>,
+    tile_map: Option<TerminalTileMap>,
     terminal: DefaultTerminal,
     latest_event: crossterm::event::Event,
 }
@@ -33,6 +76,7 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn init(base: Base<Node>) -> Self {
         Self {
+            tile_map: None,
             base,
             terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
             latest_event: crossterm::event::Event::FocusGained,
@@ -42,6 +86,23 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn ready(&mut self) {
         self.terminal = ratatui::init();
+        self.tile_map = self
+            .base()
+            .try_get_node_as::<TileMap>("TileMap")
+            .map(|tile_map| {
+                let area = tile_map.get_used_rect();
+                let mut terminal_tile_map = TerminalTileMap::new(Buffer::empty(Rect::new(
+                    area.position.x as u16,
+                    area.position.y as u16,
+                    area.size.x as u16,
+                    area.size.y as u16,
+                )));
+
+                terminal_tile_map.apply_layer(&tile_map, 0, Style::new());
+                terminal_tile_map.apply_layer(&tile_map, 1, Style::new().fg(Color::Red));
+
+                terminal_tile_map
+            });
     }
 
     #[instrument(skip_all)]
@@ -65,6 +126,14 @@ impl INode for Terminal {
                     ),
                     frame.area(),
                 );
+                let layout = Layout::new(
+                    Direction::Vertical,
+                    [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)],
+                )
+                .split(frame.area());
+                if let Some(tile_map) = &self.tile_map {
+                    frame.render_widget(tile_map, layout[1]);
+                }
             })
             .unwrap();
     }

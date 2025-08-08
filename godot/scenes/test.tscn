@@ -1,5 +1,7 @@
-[gd_scene format=3 uid="uid://w0f4v5xkeiwu"]
+[gd_scene load_steps=2 format=3 uid="uid://w0f4v5xkeiwu"]
+
+[ext_resource type="PackedScene" uid="uid://ca2vxj12y1mdb" path="res://scenes/terminal.tscn" id="1_errlg"]
 
 [node name="Node3D" type="LoggingNode"]
 
-[node name="Terminal" type="Terminal" parent="."]
+[node name="Terminal" parent="." instance=ExtResource("1_errlg")]
