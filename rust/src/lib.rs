@@ -22,10 +22,7 @@ unsafe impl ExtensionLibrary for FnafDoubleVisionExtension {
     fn on_level_init(level: InitLevel) {
         match level {
             InitLevel::Core => {
-                color_eyre::config::HookBuilder::new()
-                    .theme(color_eyre::config::Theme::default())
-                    .install()
-                    .unwrap();
+                color_eyre::install().unwrap();
 
                 let log_server = tracing_godot::LogServer::new();
                 LOG_SERVER.set(log_server).unwrap();
