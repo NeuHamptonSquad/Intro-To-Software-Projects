@@ -72,9 +72,9 @@ impl ITileMapLayer for TerminalTileMapLayer {
     }
 }
 
-impl TerminalTileMapLayer {
+impl Widget for &TerminalTileMapLayer {
     #[instrument(skip_all)]
-    fn render(&self, mut area: Rect, buf: &mut Buffer)
+    fn render(self, mut area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
     {
