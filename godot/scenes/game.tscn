@@ -658,3 +658,53 @@ size = Vector3(1, 0.581848, 1.14954)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0370235, -0.0289341, 0.0202637)
 operation = 2
 size = Vector3(1.35428, 0.47834, 0.959473)
+
+[node name="Vent4" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-4.37114e-08, 0, 1, -0.47481, 0.880088, -2.07546e-08, -0.880088, -0.47481, -3.84699e-08, -19.9571, -0.0825384, 19.6141)
+use_collision = true
+size = Vector3(5.39551, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.043005, -0.0289354, 0.0202637)
+operation = 2
+size = Vector3(5.64005, 0.47834, 0.959473)
+
+[node name="Vent5" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -19.9562, -1.33193, -1.26384)
+use_collision = true
+size = Vector3(37.4383, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0146804, -0.0289341, 0.0202637)
+operation = 2
+size = Vector3(38.1126, 0.47834, 0.959473)
+
+[node name="Vent6" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-3.84869e-08, -2.07231e-08, -1, -0.474088, 0.880477, 0, 0.880477, 0.474088, -4.37114e-08, -19.9139, -0.115062, -22.1505)
+use_collision = true
+size = Vector3(5.2583, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0165653, -0.0289354, 0.0202637)
+operation = 2
+size = Vector3(5.75919, 0.47834, 0.959473)
+
+[node name="Vent7" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -19.9053, 1.02228, -24.8364)
+use_collision = true
+size = Vector3(1, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0370235, -0.0289341, 0.0202637)
+operation = 2
+size = Vector3(1.35428, 0.47834, 0.959473)
+
+[node name="Vent8" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9562, 1.02228, -25.8303)
+use_collision = true
+size = Vector3(7.01715, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0099144, -0.0289341, 0.0202637)
+operation = 2
+size = Vector3(7.09472, 0.47834, 0.959473)
