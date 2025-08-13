@@ -1,7 +1,6 @@
 [configuration]
 entry_symbol = "swift_entry_point"
 compatibility_minimum = 4.4
-reloadable = true
 
 [libraries]
 linux.debug.x86_64 =     "res://../swift/.build/x86_64-unknown-linux-gnu/debug/libfnaf.so"

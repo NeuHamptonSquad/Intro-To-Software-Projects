@@ -1,154 +1,37 @@
 use std::{io::stdout, ops::Deref, time::Duration};
 
+use ansi_to_tui::IntoText;
+use clap::Parser;
 use godot::{
-    classes::{ITileMapLayer, InputEvent, InputEventKey, TileMapLayer},
+    classes::{InputEvent, InputEventKey},
     prelude::*,
 };
 use ratatui::{
     DefaultTerminal,
-    buffer::Buffer,
     crossterm::{
         self,
         event::{
-            KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers, MediaKeyCode,
+            self, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers, MediaKeyCode,
             ModifierKeyCode,
         },
     },
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Offset, Rect},
     prelude::CrosstermBackend,
-    style::{Color, Style},
-    widgets::{Block, Borders, Paragraph, Widget, Wrap},
+    text::Text,
+    widgets::{Block, Borders, Paragraph},
 };
+use tachyonfx::{Effect, Interpolation, Shader, fx};
 use tracing::instrument;
+use yoke::{Yoke, Yokeable};
 
-const TILESET: [&'static str; 28] = [
-    "#", "|", "─", "└", "─", "┘", "┌", "┐", "│", "├", "┤", "┬", "┴", "┼", "░", "▉", "┃", "━", "┗",
-    "┛", "┏", "┓", "┣", "┫", "┳", "┻", "╋", "▉",
-];
+use crate::terminal::{cursor_x::CursorX, tile_map::TerminalTileMap};
 
-#[derive(GodotClass)]
-#[class(base=TileMapLayer)]
-struct TerminalTileMapLayer {
-    base: Base<TileMapLayer>,
-    buffer: Buffer,
-}
+mod commands;
+mod cursor_x;
+mod tile_map;
 
-#[godot_api]
-impl ITileMapLayer for TerminalTileMapLayer {
-    #[instrument(skip_all)]
-    fn init(base: Base<TileMapLayer>) -> Self {
-        Self {
-            base,
-            buffer: Buffer::empty(Rect::new(0, 0, 1, 1)),
-        }
-    }
-
-    #[instrument(skip(self, tiles))]
-    fn update_cells(&mut self, mut tiles: Array<Vector2i>, forced_cleanup: bool) {
-        let base = self.base().clone();
-        let used_rect = base.get_used_rect();
-        let used_rect = Rect::new(
-            used_rect.position.x as u16,
-            used_rect.position.y as u16,
-            used_rect.size.x as u16,
-            used_rect.size.y as u16,
-        );
-        if forced_cleanup || used_rect != self.buffer.area {
-            self.buffer = Buffer::empty(used_rect);
-            tiles = base.get_used_cells();
-        }
-        let modulate = base.get_modulate();
-        let layer_style = Style::new().fg(Color::Rgb(modulate.r8(), modulate.g8(), modulate.b8()));
-        for coordinate in tiles.iter_shared() {
-            if let Some(cell) = self
-                .buffer
-                .cell_mut((coordinate.x as u16, coordinate.y as u16))
-            {
-                let cell_atlas_x = base.get_cell_atlas_coords(coordinate).x as usize;
-                cell.set_symbol(TILESET.get(cell_atlas_x).unwrap_or(&" "));
-                cell.set_style(layer_style);
-            }
-        }
-    }
-}
-
-impl Widget for &TerminalTileMapLayer {
-    #[instrument(skip_all)]
-    fn render(self, mut area: Rect, buf: &mut Buffer)
-    where
-        Self: Sized,
-    {
-        let tilemap_line_iterator = self.buffer.content.chunks(self.buffer.area.width as usize);
-        area.x += self.buffer.area.x;
-        area.y += self.buffer.area.y;
-        area.width = self.buffer.area.width.min(area.width - self.buffer.area.x);
-        area.height = self
-            .buffer
-            .area
-            .height
-            .min(area.height - self.buffer.area.y);
-        for (y, line) in (area.y..area.bottom()).zip(tilemap_line_iterator) {
-            let line_start = buf.index_of(area.x, y);
-            let target_line = &mut buf.content[line_start..line_start + line.len()];
-
-            target_line
-                .iter_mut()
-                .zip(line.iter())
-                .filter(|(_, line_cell)| line_cell.symbol() != " ")
-                .for_each(|(target_cell, line_cell)| *target_cell = line_cell.clone());
-        }
-    }
-}
-
-#[derive(GodotClass)]
-#[class(base=Node)]
-pub struct TerminalTileMap {
-    base: Base<Node>,
-    layers: Vec<Gd<TerminalTileMapLayer>>,
-}
-
-#[godot_api]
-impl INode for TerminalTileMap {
-    #[instrument(skip_all)]
-    fn init(base: Base<Node>) -> Self {
-        Self {
-            base,
-            layers: Vec::new(),
-        }
-    }
-
-    #[instrument(skip_all)]
-    fn ready(&mut self) {
-        self.layers.clear();
-        self.layers.extend(
-            self.base()
-                .get_children()
-                .iter_shared()
-                .flat_map(|node| node.try_cast::<TerminalTileMapLayer>()),
-        );
-    }
-}
-
-impl TerminalTileMap {
-    #[instrument(skip_all)]
-    fn get_used_rect(&self) -> Rect {
-        self.layers.iter().fold(Rect::ZERO, |rect, layer| {
-            rect.union(layer.bind().buffer.area)
-        })
-    }
-}
-
-impl Widget for &TerminalTileMap {
-    #[instrument(skip_all)]
-    fn render(self, area: Rect, buf: &mut Buffer)
-    where
-        Self: Sized,
-    {
-        for layer in &self.layers {
-            layer.bind().render(area, buf)
-        }
-    }
-}
+#[derive(Yokeable)]
+pub struct YokeableText<'a>(Text<'a>);
 
 #[derive(GodotClass)]
 #[class(base=Node)]
@@ -158,7 +41,11 @@ pub struct Terminal {
     base: Base<Node>,
     tile_map: Option<Gd<TerminalTileMap>>,
     terminal: DefaultTerminal,
-    latest_event: crossterm::event::Event,
+    terminal_command: String,
+    terminal_command_output: Yoke<YokeableText<'static>, String>,
+    cursor_x: CursorX,
+    effect: Effect,
+    initialized: bool,
 }
 
 #[godot_api]
@@ -169,7 +56,14 @@ impl INode for Terminal {
             tile_map: None,
             base,
             terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
-            latest_event: crossterm::event::Event::FocusGained,
+            terminal_command: String::new(),
+            terminal_command_output: Yoke::attach_to_cart(
+                String::from("Try typing `help` to get started"),
+                |cart| YokeableText(Text::from(cart)),
+            ),
+            cursor_x: CursorX::default(),
+            effect: fx::coalesce((1000, Interpolation::Linear)),
+            initialized: false,
         }
     }
 
@@ -186,34 +80,53 @@ impl INode for Terminal {
         }
         self.terminal
             .draw(|frame| {
-                frame.render_widget(
-                    Paragraph::new(format!(
-                        "The terminal is working\nThat latest event was {:?}",
-                        self.latest_event
-                    ))
-                    .wrap(Wrap { trim: true })
-                    .alignment(ratatui::layout::Alignment::Center)
-                    .block(
-                        Block::new()
-                            .title("FNAF 5: Double Vision")
-                            .borders(Borders::all()),
-                    ),
-                    frame.area(),
-                );
-                let layout = Layout::new(
+                let area = frame.area();
+                let [main_area, error_area, terminal_area]: [Rect; 3] = Layout::new(
                     Direction::Vertical,
-                    [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)],
+                    [
+                        Constraint::Min(0),
+                        Constraint::Length(
+                            self.terminal_command_output.get().0.height() as u16 + 2,
+                        ),
+                        Constraint::Length(3),
+                    ],
                 )
-                .split(frame.area());
-                if let Some(tile_map) = &self.tile_map {
-                    let tile_map = tile_map.bind();
-                    let used_rect = tile_map.get_used_rect();
-                    let center =
-                        Layout::new(Direction::Horizontal, [Constraint::Length(used_rect.width)])
-                            .flex(ratatui::layout::Flex::Center)
-                            .split(layout[1]);
-                    frame.render_widget(tile_map.deref(), center[0]);
+                .split(area)
+                .as_ref()
+                .try_into()
+                .unwrap();
+                if self.initialized {
+                    if let Some(tile_map) = &self.tile_map {
+                        let tile_map = tile_map.bind();
+                        let used_rect = tile_map.get_used_rect();
+                        let center = Layout::new(
+                            Direction::Horizontal,
+                            [Constraint::Length(used_rect.width)],
+                        )
+                        .flex(ratatui::layout::Flex::Center)
+                        .split(main_area)[0];
+                        frame.render_widget(tile_map.deref(), center);
+                    }
                 }
+                frame.render_widget(
+                    Paragraph::new(self.terminal_command.as_str())
+                        .block(Block::new().borders(Borders::all())),
+                    terminal_area,
+                );
+                frame.render_widget(
+                    Paragraph::new(self.terminal_command_output.get().0.clone())
+                        .block(Block::new().borders(Borders::all())),
+                    error_area,
+                );
+                frame.set_cursor_position(terminal_area.offset(Offset {
+                    x: self.cursor_x.column() as i32 + 1,
+                    y: 1,
+                }));
+                self.effect.process(
+                    Duration::from_secs_f64(delta),
+                    frame.buffer_mut(),
+                    main_area,
+                );
             })
             .unwrap();
     }
@@ -407,10 +320,111 @@ impl INode for Terminal {
     }
 }
 
+#[godot_api]
+impl Terminal {
+    #[signal]
+    fn init();
+}
+
 impl Terminal {
     #[instrument(skip(self))]
     fn event(&mut self, event: crossterm::event::Event) {
         tracing::debug!("New Event");
-        self.latest_event = event;
+        match event {
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Char(c),
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                self.terminal_command.insert(self.cursor_x.byte(), c);
+                self.cursor_x.incr_by_char(c);
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Left,
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                if let Some(char) = self
+                    .terminal_command
+                    .chars()
+                    .nth(self.cursor_x.character().saturating_sub(1))
+                {
+                    self.cursor_x.decr_by_char(char);
+                }
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Right,
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                if let Some(char) = self.terminal_command.chars().nth(self.cursor_x.character()) {
+                    self.cursor_x.incr_by_char(char);
+                }
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Enter,
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                self.cursor_x = CursorX::default();
+                self.command();
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Backspace,
+                modifiers: KeyModifiers::CONTROL,
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                self.cursor_x = CursorX::default();
+                self.terminal_command.clear();
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Backspace,
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                let character_x = self.cursor_x.character();
+                if character_x == 0 {
+                    return;
+                }
+                if let Some((index, char)) = self
+                    .terminal_command
+                    .char_indices()
+                    .nth(character_x.saturating_sub(1))
+                {
+                    self.terminal_command.remove(index);
+                    self.cursor_x.decr_by_char(char);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn command(&mut self) {
+        if let Some(command) = shlex::split(&self.terminal_command) {
+            let cli = commands::Cli::try_parse_from(command);
+            match cli {
+                Ok(command) => {
+                    self.terminal_command_output =
+                        Yoke::attach_to_cart(String::new(), |cart| YokeableText(Text::from(cart)));
+                    match command.command {
+                        commands::Commands::Init => {
+                            if !self.initialized {
+                                self.signals().init().emit();
+                                self.effect = fx::coalesce((1000, Interpolation::Linear));
+                                self.initialized = true;
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    self.terminal_command_output =
+                        Yoke::attach_to_cart(e.render().ansi().to_string(), |f| {
+                            YokeableText(f.into_text().unwrap())
+                        });
+                }
+            }
+        }
+        self.terminal_command.clear();
     }
 }

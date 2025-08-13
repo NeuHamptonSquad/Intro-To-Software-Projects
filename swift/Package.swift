@@ -24,7 +24,10 @@ let package = Package(
       dependencies: [
         "SwiftGodot"
       ],
-      swiftSettings: [.unsafeFlags(["-suppress-warnings"])]
+      swiftSettings: [.unsafeFlags(["-suppress-warnings"])],
+      plugins: [
+        .plugin(name: "EntryPointGeneratorPlugin", package: "SwiftGodot")
+      ],
     )
 
   ]

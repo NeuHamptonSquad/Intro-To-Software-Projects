@@ -1,5 +1,5 @@
 {
-  "originHash" : "865be41e6571d2b93f4fcb487181968afefbad6e4b801b3279ddf3323e54b7af",
+  "originHash" : "6619570f963f3f5652fcc93abf2755ca51791615b18e977947694284e3af1ccd",
   "pins" : [
     {
       "identity" : "swift-argument-parser",
@@ -22,10 +22,10 @@
     {
       "identity" : "swiftgodot",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/elijah-semyonov/SwiftGodot",
+      "location" : "https://github.com/StratusFearMe21/SwiftGodot",
       "state" : {
-        "branch" : "registration-stage",
-        "revision" : "0e23c13d177643358eb5d95259acfef47af7c8a8"
+        "branch" : "main",
+        "revision" : "ba99cb53e3705aa53154060dbf8699174f92d61c"
       }
     }
   ],
