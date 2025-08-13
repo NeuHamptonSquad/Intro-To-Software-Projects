@@ -121,12 +121,12 @@ impl Write for LogServerWriter {
         let buf =
             std::str::from_utf8(buf).map_err(|e| std::io::Error::new(ErrorKind::InvalidData, e))?;
         match self.0 {
-            Level::ERROR => {
-                godot::global::push_error(&[Variant::from(strip_ansi::strip_ansi(buf))])
-            }
-            Level::WARN => {
-                godot::global::push_warning(&[Variant::from(strip_ansi::strip_ansi(buf))])
-            }
+            Level::ERROR => godot::global::push_error(&[Variant::from(
+                anstream::adapter::strip_str(buf).to_string(),
+            )]),
+            Level::WARN => godot::global::push_warning(&[Variant::from(
+                anstream::adapter::strip_str(buf).to_string(),
+            )]),
             _ => {}
         }
         if let Some(log_server) = LOG_SERVER.get() {
