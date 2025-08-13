@@ -72,6 +72,9 @@ impl Widget for &TerminalTileMapLayer {
     where
         Self: Sized,
     {
+        if self.buffer.area.width <= 0 {
+            return;
+        }
         let tilemap_line_iterator = self.buffer.content.chunks(self.buffer.area.width as usize);
         area.x += self.buffer.area.x;
         area.y += self.buffer.area.y;
