@@ -87,7 +87,7 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn ready(&mut self) {
         self.terminal = ratatui::init();
-        self.main_tile_map = self.base().try_get_node_as("MainTileMap");
+        self.main_tile_map = self.base().try_get_node_as("MainView");
         self.signals().init().connect_self(Self::_on_init);
         self.signals().pause().connect_self(Self::_on_pause);
     }
