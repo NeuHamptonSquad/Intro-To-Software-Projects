@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://dgjwhnxth0j3c"]
+[gd_scene load_steps=9 format=3 uid="uid://dgjwhnxth0j3c"]
 
 [ext_resource type="PackedScene" uid="uid://bs72ogkvdd7d6" path="res://addons/proto_controller/proto_controller.tscn" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
 [ext_resource type="PackedScene" uid="uid://bxr3jjv4hi378" path="res://scenes/grate.tscn" id="2_yqjtg"]
+[ext_resource type="Texture2D" uid="uid://cjeuctyy4m2kw" path="res://assets/2025-08-13 09-15-33.png" id="4_lbhrr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yqjtg"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -16,6 +17,9 @@ background_mode = 2
 sky = SubResource("Sky_lnu2h")
 tonemap_mode = 2
 glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iywne"]
+albedo_texture = ExtResource("4_lbhrr")
 
 [node name="Game" type="Node3D"]
 
@@ -41,7 +45,16 @@ light_color = Color(1, 0.847059, 0.552941, 1)
 script = null
 
 [node name="ProtoController" parent="." instance=ExtResource("1_lnu2h")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.40998, 0, -1.68049)
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+script = null
 
 [node name="Map" type="Node" parent="."]
 
@@ -1095,3 +1108,8 @@ operation = 2
 radius = 2.73096
 height = 5.52832
 sides = 64
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -19.4283, -4.08784, -0.757294)
+material_override = SubResource("StandardMaterial3D_iywne")
+size = Vector3(50.0254, 1, 60.1608)
