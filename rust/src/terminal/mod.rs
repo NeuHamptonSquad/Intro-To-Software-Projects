@@ -15,7 +15,7 @@ use ratatui::{
             ModifierKeyCode,
         },
     },
-    layout::{Constraint, Direction, Layout, Offset, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Offset, Rect},
     prelude::CrosstermBackend,
     text::Text,
     widgets::{Block, Borders, Paragraph},
@@ -24,7 +24,14 @@ use tachyonfx::{Effect, Interpolation, Shader, fx};
 use tracing::instrument;
 use yoke::{Yoke, Yokeable};
 
-use crate::terminal::{cursor_x::CursorX, tile_map::TerminalTileMap};
+use crate::terminal::{
+    commands::{
+        main::{MainCli, MainCommands},
+        pause::{PauseCli, PauseCommands},
+    },
+    cursor_x::CursorX,
+    tile_map::TerminalTileMap,
+};
 
 mod commands;
 mod cursor_x;
@@ -46,6 +53,7 @@ pub struct Terminal {
     cursor_x: CursorX,
     effect: Effect,
     initialized: bool,
+    paused: bool,
 }
 
 #[godot_api]
@@ -64,6 +72,7 @@ impl INode for Terminal {
             cursor_x: CursorX::default(),
             effect: fx::coalesce((1000, Interpolation::Linear)),
             initialized: false,
+            paused: false,
         }
     }
 
@@ -71,6 +80,8 @@ impl INode for Terminal {
     fn ready(&mut self) {
         self.terminal = ratatui::init();
         self.tile_map = self.base().try_get_node_as("TileMap");
+        self.signals().init().connect_self(Self::_on_init);
+        self.signals().pause().connect_self(Self::_on_pause);
     }
 
     #[instrument(skip_all)]
@@ -95,19 +106,6 @@ impl INode for Terminal {
                 .as_ref()
                 .try_into()
                 .unwrap();
-                if self.initialized {
-                    if let Some(tile_map) = &self.tile_map {
-                        let tile_map = tile_map.bind();
-                        let used_rect = tile_map.get_used_rect();
-                        let center = Layout::new(
-                            Direction::Horizontal,
-                            [Constraint::Length(used_rect.width)],
-                        )
-                        .flex(ratatui::layout::Flex::Center)
-                        .split(main_area)[0];
-                        frame.render_widget(tile_map.deref(), center);
-                    }
-                }
                 frame.render_widget(
                     Paragraph::new(self.terminal_command.as_str())
                         .block(Block::new().borders(Borders::all())),
@@ -122,11 +120,38 @@ impl INode for Terminal {
                     x: self.cursor_x.column() as i32 + 1,
                     y: 1,
                 }));
-                self.effect.process(
-                    Duration::from_secs_f64(delta),
-                    frame.buffer_mut(),
-                    main_area,
-                );
+                if self.paused {
+                    let paused_text = Text::from("Paused");
+                    let center = Rect::new(
+                        main_area.x,
+                        main_area.y + (main_area.height / 2),
+                        main_area.width,
+                        paused_text.height() as u16,
+                    );
+                    frame.render_widget(
+                        Paragraph::new(paused_text).alignment(Alignment::Center),
+                        center,
+                    );
+                } else {
+                    if self.initialized {
+                        if let Some(tile_map) = &self.tile_map {
+                            let tile_map = tile_map.bind();
+                            let used_rect = tile_map.get_used_rect();
+                            let center = Layout::new(
+                                Direction::Horizontal,
+                                [Constraint::Length(used_rect.width)],
+                            )
+                            .flex(ratatui::layout::Flex::Center)
+                            .split(main_area)[0];
+                            frame.render_widget(tile_map.deref(), center);
+                        }
+                    }
+                    self.effect.process(
+                        Duration::from_secs_f64(delta),
+                        frame.buffer_mut(),
+                        main_area,
+                    );
+                }
             })
             .unwrap();
     }
@@ -324,6 +349,19 @@ impl INode for Terminal {
 impl Terminal {
     #[signal]
     fn init();
+    #[signal]
+    fn pause(state: bool);
+
+    #[func]
+    fn _on_init(&mut self) {
+        self.effect = fx::coalesce((1000, Interpolation::Linear));
+        self.initialized = true;
+    }
+
+    #[func]
+    fn _on_pause(&mut self, state: bool) {
+        self.paused = state;
+    }
 }
 
 impl Terminal {
@@ -402,29 +440,57 @@ impl Terminal {
 
     fn command(&mut self) {
         if let Some(command) = shlex::split(&self.terminal_command) {
-            let cli = commands::Cli::try_parse_from(command);
-            match cli {
-                Ok(command) => {
-                    self.terminal_command_output =
-                        Yoke::attach_to_cart(String::new(), |cart| YokeableText(Text::from(cart)));
-                    match command.command {
-                        commands::Commands::Init => {
-                            if !self.initialized {
-                                self.signals().init().emit();
-                                self.effect = fx::coalesce((1000, Interpolation::Linear));
-                                self.initialized = true;
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    self.terminal_command_output =
-                        Yoke::attach_to_cart(e.render().ansi().to_string(), |f| {
-                            YokeableText(f.into_text().unwrap())
-                        });
-                }
+            if !self.paused {
+                self.main_command(command);
+            } else {
+                self.pause_command(command);
             }
         }
         self.terminal_command.clear();
+    }
+
+    fn main_command(&mut self, command: Vec<String>) {
+        let cli = MainCli::try_parse_from(command);
+        match cli {
+            Ok(command) => {
+                self.clear_terminal_output();
+                match command.command {
+                    MainCommands::Init => {
+                        if !self.initialized {
+                            self.signals().init().emit();
+                        }
+                    }
+                    MainCommands::Pause => self.signals().pause().emit(true),
+                }
+            }
+            Err(e) => {
+                self.set_terminal_output(e.render().ansi().to_string());
+            }
+        }
+    }
+
+    fn pause_command(&mut self, command: Vec<String>) {
+        let cli = PauseCli::try_parse_from(command);
+        match cli {
+            Ok(command) => {
+                self.clear_terminal_output();
+                match command.command {
+                    PauseCommands::UnPause => self.signals().pause().emit(false),
+                }
+            }
+            Err(e) => {
+                self.set_terminal_output(e.render().ansi().to_string());
+            }
+        }
+    }
+
+    fn set_terminal_output(&mut self, output: String) {
+        self.terminal_command_output =
+            Yoke::attach_to_cart(output, |f| YokeableText(f.into_text().unwrap()));
+    }
+
+    fn clear_terminal_output(&mut self) {
+        self.terminal_command_output =
+            Yoke::attach_to_cart(String::new(), |f| YokeableText(Text::from(f)));
     }
 }
