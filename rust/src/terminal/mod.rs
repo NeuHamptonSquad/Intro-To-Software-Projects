@@ -1,4 +1,4 @@
-use std::{io::stdout, ops::Deref, time::Duration};
+use std::{cell::RefCell, io::stdout, ops::Deref, time::Duration};
 
 use ansi_to_tui::IntoText;
 use clap::Parser;
@@ -20,7 +20,7 @@ use ratatui::{
     text::Text,
     widgets::{Block, Borders, Paragraph},
 };
-use tachyonfx::{Effect, Interpolation, Shader, fx};
+use tachyonfx::{Effect, Interpolation, RefCount, Shader, fx};
 use tracing::instrument;
 use yoke::{Yoke, Yokeable};
 
@@ -40,16 +40,23 @@ mod tile_map;
 #[derive(Yokeable)]
 pub struct YokeableText<'a>(Text<'a>);
 
+#[derive(Default, Clone, Copy)]
+enum TerminalState {
+    #[default]
+    MainView,
+}
+
 #[derive(GodotClass)]
 #[class(base=Node)]
 /// This class is responsible for the terminal side
 /// of this game.
 pub struct Terminal {
     base: Base<Node>,
-    tile_map: Option<Gd<TerminalTileMap>>,
+    main_tile_map: Option<Gd<TerminalTileMap>>,
     terminal: DefaultTerminal,
     terminal_command: String,
     terminal_command_output: Yoke<YokeableText<'static>, String>,
+    terminal_state: RefCount<TerminalState>,
     cursor_x: CursorX,
     effect: Effect,
     initialized: bool,
@@ -61,7 +68,7 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn init(base: Base<Node>) -> Self {
         Self {
-            tile_map: None,
+            main_tile_map: None,
             base,
             terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
             terminal_command: String::new(),
@@ -69,6 +76,7 @@ impl INode for Terminal {
                 String::from("Try typing `help` to get started"),
                 |cart| YokeableText(Text::from(cart)),
             ),
+            terminal_state: RefCount::new(RefCell::new(TerminalState::default())),
             cursor_x: CursorX::default(),
             effect: fx::coalesce((1000, Interpolation::Linear)),
             initialized: false,
@@ -79,7 +87,7 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn ready(&mut self) {
         self.terminal = ratatui::init();
-        self.tile_map = self.base().try_get_node_as("TileMap");
+        self.main_tile_map = self.base().try_get_node_as("MainTileMap");
         self.signals().init().connect_self(Self::_on_init);
         self.signals().pause().connect_self(Self::_on_pause);
     }
@@ -134,16 +142,20 @@ impl INode for Terminal {
                     );
                 } else {
                     if self.initialized {
-                        if let Some(tile_map) = &self.tile_map {
-                            let tile_map = tile_map.bind();
-                            let used_rect = tile_map.get_used_rect();
-                            let center = Layout::new(
-                                Direction::Horizontal,
-                                [Constraint::Length(used_rect.width)],
-                            )
-                            .flex(ratatui::layout::Flex::Center)
-                            .split(main_area)[0];
-                            frame.render_widget(tile_map.deref(), center);
+                        match *self.terminal_state.borrow() {
+                            TerminalState::MainView => {
+                                if let Some(main_tile_map) = &self.main_tile_map {
+                                    let main_tile_map = main_tile_map.bind();
+                                    let used_rect = main_tile_map.get_used_rect();
+                                    let center = Layout::new(
+                                        Direction::Horizontal,
+                                        [Constraint::Length(used_rect.width)],
+                                    )
+                                    .flex(ratatui::layout::Flex::Center)
+                                    .split(main_area)[0];
+                                    frame.render_widget(main_tile_map.deref(), center);
+                                }
+                            }
                         }
                     }
                     self.effect.process(
