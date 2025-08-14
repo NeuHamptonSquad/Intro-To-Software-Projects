@@ -57,7 +57,7 @@ editor_description = ""
 script = null
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -19.0033, 0.0901318, -1.03684)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -19.0033, -4.74847, -1.03684)
 material_override = SubResource("StandardMaterial3D_iywne")
 size = Vector3(51.1357, 1, 60.7769)
 
@@ -303,12 +303,12 @@ height = 1.38385
 sides = 55
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/Hallways/HallwayLongOne"]
-transform = Transform3D(3.55271e-15, 4.37095e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 4.56671, 1.76578, -0.262462)
+transform = Transform3D(3.55271e-15, 4.37095e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 4.56671, 0.636631, -0.262463)
 operation = 2
 size = Vector3(5.88828, 4.27322, 1.54262)
 
 [node name="Arch" type="CSGCombiner3D" parent="Map/Hallways/HallwayLongOne"]
-transform = Transform3D(-8.74228e-08, -1.61215e-14, -1, 1, -6.21176e-22, -8.74228e-08, 8.35188e-23, -1, 1.09268e-14, -1.57562, 13.2654, 0.018688)
+transform = Transform3D(-8.74228e-08, -1.61215e-14, -1, 1, -6.21174e-22, -8.74228e-08, 8.35188e-23, -1, 1.09268e-14, -1.21846, 13.0153, 0.0186877)
 operation = 2
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Hallways/HallwayLongOne/Arch"]
@@ -336,9 +336,9 @@ height = 1.53076
 sides = 26
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Hallways/HallwayLongOne"]
-transform = Transform3D(1, 0, 0, 0, 1, -8.35189e-23, 0, -8.35188e-23, 1, -3.22427, -0.204847, 3.7151)
+transform = Transform3D(1, 0, 0, 0, 1, -8.35189e-23, 0, -8.35188e-23, 1, -0.660488, -0.949301, 3.6838)
 operation = 2
-size = Vector3(3.00708, 0.952026, 0.477333)
+size = Vector3(8.13464, 0.952026, 0.539936)
 
 [node name="CSGBox3D3" type="CSGBox3D" parent="Map/Hallways/HallwayLongOne"]
 transform = Transform3D(1, 0, 0, 0, 1, -8.35189e-23, 0, -8.35188e-23, 1, 3.0749, -0.168213, 3.754)
@@ -471,9 +471,9 @@ height = 1.53076
 sides = 26
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Rooms/L1Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.03493, -1.05552, 0.25988)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.03493, -1.05552, 0.252632)
 operation = 2
-size = Vector3(0.613647, 0.487549, 0.955688)
+size = Vector3(0.613647, 0.487549, 1.05191)
 
 [node name="L2Room" type="CSGBox3D" parent="Map/Rooms"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.1914, 2.0618, 23.6544)
@@ -499,9 +499,9 @@ height = 1.53076
 sides = 26
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Rooms/L2Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0198, -1.05552, 0.25988)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.01919, -1.06234, 0.259499)
 operation = 2
-size = Vector3(0.613647, 0.487549, 0.955688)
+size = Vector3(0.613647, 0.516052, 1.01349)
 
 [node name="CSGBox3D3" type="CSGBox3D" parent="Map/Rooms/L2Room"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.26933, -1.05824, -3.6111)
@@ -630,39 +630,44 @@ operation = 2
 size = Vector3(2.35986, 0.47834, 0.959473)
 
 [node name="Vent2" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9562, 1.02228, 23.1929)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5371, 1.02228, 23.8846)
 use_collision = true
-size = Vector3(7.01715, 0.581848, 1.14954)
+size = Vector3(7.81501, 0.581848, 1.14954)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0099144, -0.0289341, 0.0202637)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.106104, -0.0289341, 0.0202637)
 operation = 2
-size = Vector3(7.09472, 0.47834, 0.959473)
+size = Vector3(8.58203, 0.47834, 0.959473)
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0917664, -0.0294037, -0.0566406)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0648918, -0.0318143, -0.064167)
 operation = 2
-size = Vector3(0.946594, 0.476532, 1.11328)
+size = Vector3(0.823685, 0.470688, 1.11328)
 
 [node name="Vent3" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -19.9562, 1.02228, 22.2015)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -20.5028, 1.02228, 22.8267)
 use_collision = true
 size = Vector3(1, 0.581848, 1.14954)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0370197, -0.030394, 0.0930462)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0370197, -0.030394, 0.02738)
 operation = 2
-size = Vector3(1.35428, 0.481846, 0.945374)
+size = Vector3(1.35428, 0.481846, 0.814041)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.505564, -0.189342, 0.0960903)
+operation = 2
+size = Vector3(0.318245, 0.643555, 0.948181)
 
 [node name="Vent4" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(-4.37114e-08, 0, 1, -0.47481, 0.880088, -2.07546e-08, -0.880088, -0.47481, -3.84699e-08, -19.8864, -0.0825384, 19.6141)
+transform = Transform3D(-4.37114e-08, 0, 1, -0.47481, 0.880088, -2.07546e-08, -0.880088, -0.47481, -3.84699e-08, -20.5027, -0.0395379, 20.4088)
 use_collision = true
-size = Vector3(5.39551, 0.581848, 1.14954)
+size = Vector3(5.39551, 0.581848, 1.14798)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.043005, -0.0289354, 0.0202637)
+transform = Transform3D(1, 2.98023e-08, 3.55271e-15, -2.98023e-08, 1, -8.88178e-15, 0, 1.77636e-15, 1, 0.0430031, -0.0289364, 0.0208473)
 operation = 2
-size = Vector3(5.64005, 0.47834, 0.959473)
+size = Vector3(5.64005, 0.47834, 0.833672)
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent4"]
 transform = Transform3D(0.877975, -0.478707, -5.33388e-09, 0.478707, 0.877975, 2.09249e-08, -5.33366e-09, -2.09244e-08, 1, -2.86731, 0.157291, -0.0132751)
@@ -670,9 +675,9 @@ operation = 2
 size = Vector3(1.13281, 0.208496, 1.19037)
 
 [node name="CSGBox3D3" type="CSGBox3D" parent="Map/Vents/Vent4"]
-transform = Transform3D(0.893959, -0.448149, -4.63519e-09, 0.448149, 0.893959, 1.95892e-08, -4.63627e-09, -1.95892e-08, 1, -2.44355, -0.177414, 0.0229645)
+transform = Transform3D(0.893959, -0.448149, -4.63519e-09, 0.448149, 0.893959, 1.95892e-08, -4.63627e-09, -1.95892e-08, 1, -2.43754, -0.189388, 0.0232563)
 operation = 2
-size = Vector3(0.883911, 0.36145, 0.958344)
+size = Vector3(0.883911, 0.388245, 0.82733)
 
 [node name="CSGBox3D4" type="CSGBox3D" parent="Map/Vents/Vent4"]
 transform = Transform3D(0.882332, -0.470627, -5.14342e-09, 0.470627, 0.882332, 2.05718e-08, -5.14343e-09, -2.05714e-08, 1, 2.82348, 0.325187, 0)
@@ -680,14 +685,14 @@ operation = 2
 size = Vector3(0.59668, 0.141052, 1)
 
 [node name="Vent5" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -19.8829, -1.33193, -1.26384)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -20.5008, -1.26766, -0.394851)
 use_collision = true
-size = Vector3(37.4383, 0.581848, 1.14954)
+size = Vector3(37.5012, 0.581848, 1.14954)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent5"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0146804, -0.0289341, 0.0142212)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0146804, -0.0289341, 0.029047)
 operation = 2
-size = Vector3(38.1126, 0.47834, 0.947388)
+size = Vector3(38.1126, 0.47834, 0.82555)
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.0536, 0.351196, 0)
@@ -703,71 +708,6 @@ size = Vector3(1.021, 1, 1.42542)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.6652, 0.543869, -0.0459595)
 operation = 2
 size = Vector3(0.849854, 0.715576, 1.33679)
-
-[node name="Vent6" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(-3.84869e-08, -2.07231e-08, -1, -0.474088, 0.880477, 0, 0.880477, 0.474088, -4.37114e-08, -19.9022, -0.0850113, -21.99)
-use_collision = true
-size = Vector3(5.74939, 0.581848, 1.15793)
-
-[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent6"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, -3.96128e-13, 1, 0.129019, -0.0289364, -0.0299263)
-operation = 2
-size = Vector3(6.05037, 0.47834, 0.947342)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent6"]
-transform = Transform3D(0.874222, -0.485527, 1.49024e-08, 0.485527, 0.874222, -1.60799e-08, -5.21965e-09, 2.12923e-08, 1, -2.91676, -0.380224, 0.009552)
-operation = 2
-size = Vector3(1.35155, 0.427681, 1.01816)
-
-[node name="CSGBox3D3" type="CSGBox3D" parent="Map/Vents/Vent6"]
-transform = Transform3D(0.881995, -0.471258, 1.43076e-08, 0.471258, 0.881995, -1.56918e-08, -5.2243e-09, 2.05825e-08, 1, -2.92748, 0.60579, 0.220703)
-operation = 2
-size = Vector3(1.42957, 1.05005, 1.94727)
-
-[node name="CSGBox3D4" type="CSGBox3D" parent="Map/Vents/Vent6"]
-transform = Transform3D(0.892696, -0.450659, 1.34689e-08, 0.450659, 0.892696, -1.51208e-08, -5.21156e-09, 1.9567e-08, 1, 2.88856, 0.130733, -0.0339832)
-operation = 2
-size = Vector3(0.626465, 0.425354, 0.963358)
-
-[node name="Vent7" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -19.9037, 1.02228, -24.1547)
-use_collision = true
-size = Vector3(2.3634, 0.581848, 1.07156)
-
-[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.267641, -0.0289341, 0.0306396)
-operation = 2
-size = Vector3(2.07027, 0.47834, 0.938721)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00652, 0, 0.000183105)
-operation = 2
-size = Vector3(1.03174, 1, 1.27966)
-
-[node name="CSGBox3D3" type="CSGBox3D" parent="Map/Vents/Vent7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.697563, 0, 0.0285034)
-operation = 2
-size = Vector3(1, 1, 1.57361)
-
-[node name="CSGBox3D4" type="CSGBox3D" parent="Map/Vents/Vent7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42045, -0.750958, -0.00698853)
-operation = 2
-size = Vector3(0.817139, 1, 1.33453)
-
-[node name="Vent8" type="CSGBox3D" parent="Map/Vents"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9562, 1.02228, -25.8303)
-use_collision = true
-size = Vector3(7.01715, 0.581848, 1.14954)
-
-[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent8"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0099144, -0.0289341, 0.0202637)
-operation = 2
-size = Vector3(7.09472, 0.47834, 0.959473)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent8"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0494995, -0.0294037, 0.311256)
-operation = 2
-size = Vector3(1.01501, 0.476532, 1.03662)
 
 [node name="Vent9" type="CSGBox3D" parent="Map/Vents"]
 transform = Transform3D(-4.37114e-08, 0, 1, -0.47481, 0.880088, -2.07546e-08, -0.880088, -0.47481, -3.84699e-08, -35.4685, -0.0825384, 16.5846)
@@ -954,6 +894,36 @@ transform = Transform3D(0.882332, -0.470627, -5.14342e-09, 0.470627, 0.882332, 2
 operation = 2
 size = Vector3(0.59668, 0.141052, 1)
 
+[node name="Vent6" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -20.5371, 1.02228, -26.8784)
+use_collision = true
+size = Vector3(7.81501, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.106104, -0.0289341, 0.0202637)
+operation = 2
+size = Vector3(8.58203, 0.47834, 0.959473)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0648918, -0.0318143, -0.064167)
+operation = 2
+size = Vector3(0.823685, 0.470688, 1.11328)
+
+[node name="Vent7" type="CSGBox3D" parent="Map/Vents"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -20.5028, 1.02228, -25.9135)
+use_collision = true
+size = Vector3(1, 0.581848, 1.14954)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Vents/Vent7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0370197, -0.030394, 0.02738)
+operation = 2
+size = Vector3(1.35428, 0.481846, 0.814041)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Map/Vents/Vent7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.505564, -0.189342, 0.0960903)
+operation = 2
+size = Vector3(0.318245, 0.643555, 0.948181)
+
 [node name="CSGBox3D" type="CSGBox3D" parent="Map"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.7138, -1.1827, -10.2483)
 use_collision = true
@@ -1040,9 +1010,9 @@ use_collision = true
 size = Vector3(45.8452, 3.36035, 2.32336)
 
 [node name="CSGBox3D6" type="CSGBox3D" parent="Map/CSGBox3D6"]
-transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, -0.20709, -0.164354, -0.337323)
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, -0.773254, -0.105609, -1.15168)
 operation = 2
-size = Vector3(8.83655, 1.07077, 0.589741)
+size = Vector3(10.4653, 1.07077, 0.510203)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/CSGBox3D6"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.7719, 0.0397797, 0.959656)
@@ -1072,7 +1042,7 @@ use_collision = true
 size = Vector3(45.7316, 3.36035, 2.32336)
 
 [node name="CSGBox3D6" type="CSGBox3D" parent="Map/CSGBox3D8"]
-transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, -0.20709, -0.164354, -0.337323)
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, -0.819843, -0.164354, -0.337323)
 operation = 2
 size = Vector3(8.83655, 1.07077, 0.589741)
 
