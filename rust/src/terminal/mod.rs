@@ -30,12 +30,19 @@ use crate::terminal::{
         pause::{PauseCli, PauseCommands},
     },
     cursor_x::CursorX,
+    position_marker::PositionMarker,
     tile_map::TerminalTileMap,
 };
 
 mod commands;
 mod cursor_x;
+mod position_marker;
 mod tile_map;
+
+pub const MAP_LEFT: f32 = -41.657928;
+pub const MAP_TOP: f32 = -29.042227;
+pub const MAP_RIGHT: f32 = 4.6509995;
+pub const MAP_BOTTOM: f32 = 26.400513;
 
 #[derive(Yokeable)]
 pub struct YokeableText<'a>(Text<'a>);
@@ -58,6 +65,7 @@ pub struct Terminal {
     terminal_command_output: Yoke<YokeableText<'static>, String>,
     terminal_state: RefCount<TerminalState>,
     cursor_x: CursorX,
+    player_xy: (f32, f32),
     effect: Effect,
     initialized: bool,
     paused: bool,
@@ -78,6 +86,7 @@ impl INode for Terminal {
             ),
             terminal_state: RefCount::new(RefCell::new(TerminalState::default())),
             cursor_x: CursorX::default(),
+            player_xy: (0.0, 0.0),
             effect: fx::coalesce((1000, Interpolation::Linear)),
             initialized: false,
             paused: false,
@@ -152,8 +161,17 @@ impl INode for Terminal {
                                         [Constraint::Length(used_rect.width)],
                                     )
                                     .flex(ratatui::layout::Flex::Center)
-                                    .split(main_area)[0];
+                                    .split(Rect {
+                                        x: main_area.x,
+                                        y: main_area.y,
+                                        width: main_area.width,
+                                        height: used_rect.height,
+                                    })[0];
                                     frame.render_widget(main_tile_map.deref(), center);
+                                    frame.render_widget(
+                                        PositionMarker(self.player_xy.0, self.player_xy.1),
+                                        center,
+                                    );
                                 }
                             }
                         }
@@ -363,6 +381,13 @@ impl Terminal {
     fn init();
     #[signal]
     fn pause(state: bool);
+
+    #[func]
+    #[instrument(skip(self))]
+    fn _on_player_pos_changed(&mut self, x: f32, y: f32) {
+        self.player_xy = (x, y);
+        tracing::info!("Player pos changed");
+    }
 
     #[func]
     fn _on_init(&mut self) {

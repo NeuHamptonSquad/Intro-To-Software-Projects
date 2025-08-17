@@ -1,4 +1,7 @@
-use std::sync::OnceLock;
+use std::{
+    ops::{Add, Div, Mul, RangeInclusive, Sub},
+    sync::OnceLock,
+};
 
 use godot::{
     classes::{Engine, class_macros::sys::InitLevel},
@@ -77,5 +80,60 @@ unsafe impl ExtensionLibrary for FnafDoubleVisionExtension {
             }
             _ => {}
         }
+    }
+}
+
+// Useful traits, and lerp function from `emath`
+// https://docs.rs/emath/0.32.1/src/emath/lib.rs.html#106-113
+
+pub trait One {
+    const ONE: Self;
+}
+
+impl One for f32 {
+    const ONE: Self = 1.0;
+}
+
+impl One for f64 {
+    const ONE: Self = 1.0;
+}
+
+pub trait Real:
+    Copy
+    + PartialEq
+    + PartialOrd
+    + One
+    + Add<Self, Output = Self>
+    + Sub<Self, Output = Self>
+    + Mul<Self, Output = Self>
+    + Div<Self, Output = Self>
+{
+}
+
+impl Real for f32 {}
+
+impl Real for f64 {}
+
+#[inline(always)]
+pub fn lerp<R, T>(range: impl Into<RangeInclusive<R>>, t: T) -> R
+where
+    T: Real + Mul<R, Output = R>,
+    R: Copy + Add<R, Output = R>,
+{
+    let range = range.into();
+    (T::ONE - t) * *range.start() + t * *range.end()
+}
+
+#[inline]
+pub fn inverse_lerp<R>(range: RangeInclusive<R>, value: R) -> Option<R>
+where
+    R: Copy + PartialEq + Sub<R, Output = R> + Div<R, Output = R>,
+{
+    let min = *range.start();
+    let max = *range.end();
+    if min == max {
+        None
+    } else {
+        Some((value - min) / (max - min))
     }
 }

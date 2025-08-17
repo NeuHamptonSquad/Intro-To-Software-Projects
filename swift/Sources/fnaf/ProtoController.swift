@@ -22,6 +22,8 @@ func clamp(_ value: Float, min: Float, max: Float) -> Float {
 
 @Godot
 class ProtoController: CharacterBody3D {
+  @Signal var positionChanged: SignalWithArguments<Float, Float>
+
   @Export var canMove = true
   @Export var hasGravity = true
   @Export var canJump = true
@@ -51,11 +53,14 @@ class ProtoController: CharacterBody3D {
 
   @Node("Head") var head: Node3D
   @Node("Collider") var collider: CollisionShape3D
+  @Node("/root/GlobalTerminal") var terminal: Object
 
   override func _ready() {
     self.checkInputMappings()
     self.lookRotation.y = self.rotation.y
     self.lookRotation.x = self.head.rotation.x
+    let callable = Callable(object: terminal, method: StringName("_on_player_pos_changed"))
+    self.connect(signal: "position_changed", callable: callable)
   }
 
   override func _unhandledInput(event: InputEvent?) {
@@ -126,7 +131,13 @@ class ProtoController: CharacterBody3D {
       self.velocity.y = 0
     }
 
+    let willMove = self.velocity.x != 0 || self.velocity.y != 0
     self.moveAndSlide()
+
+    if willMove {
+      self.positionChanged.emit(self.position.x, self.position.z)
+    }
+
   }
 
   func rotateLook(rotInput: Vector2) {
