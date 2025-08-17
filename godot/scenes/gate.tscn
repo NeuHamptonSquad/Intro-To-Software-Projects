@@ -1,8 +1,11 @@
-[gd_scene format=3 uid="uid://dfjv0438wdu0y"]
+[gd_scene load_steps=2 format=3 uid="uid://dfjv0438wdu0y"]
+
+[ext_resource type="Script" uid="uid://cqr3gvtfi2h7p" path="res://scenes/gate.gd" id="1_xfvdi"]
 
 [node name="Gate" type="CSGCombiner3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.215)
 use_collision = true
+script = ExtResource("1_xfvdi")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.43431, 3.04108, 3.05366)
