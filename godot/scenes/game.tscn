@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://dgjwhnxth0j3c"]
+[gd_scene load_steps=16 format=3 uid="uid://dgjwhnxth0j3c"]
 
 [ext_resource type="PackedScene" uid="uid://bs72ogkvdd7d6" path="res://addons/proto_controller/proto_controller.tscn" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
 [ext_resource type="Texture2D" uid="uid://0hgejtj2cgma" path="res://assets/2025-08-13_10-05-13.webp" id="2_lbhrr"]
 [ext_resource type="PackedScene" uid="uid://bxr3jjv4hi378" path="res://scenes/grate.tscn" id="2_yqjtg"]
+[ext_resource type="Script" uid="uid://cqr3gvtfi2h7p" path="res://scenes/gate.gd" id="5_iywne"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yqjtg"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -21,6 +22,121 @@ glow_enabled = true
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iywne"]
 albedo_texture = ExtResource("2_lbhrr")
 
+[sub_resource type="Animation" id="Animation_p57ef"]
+length = 0.001
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Map/Gates/Gate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, -0.132716, -0.215)
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Map/Gates/Gate2:isClosed")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Map/Gates/Gate:isClosed")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="Animation" id="Animation_u5sy4"]
+resource_name = "gate2_close"
+length = 4.0
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Map/Gates/Gate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0.0666667, 1, 0, -0.132716, -0.215, 3.06667, 1, 0, -0.132716, -0.215)
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Map/Gates/Gate2:isClosed")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.0333333, 3.06667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
+[sub_resource type="Animation" id="Animation_gee14"]
+resource_name = "gate1_close"
+length = 4.0
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Map/Gates/Gate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0.0666667, 1, 0, -0.132716, -0.157996, 3.06667, 1, 1.88315, -0.132716, -0.157996)
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Map/Gates/Gate:isClosed")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
+[sub_resource type="Animation" id="Animation_0tnpc"]
+resource_name = "gate1_open"
+length = 3.0
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Map/Gates/Gate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0.0666667, 1, 1.8291, -0.132716, -0.157996, 3, 1, -0.0149844, -0.132716, -0.157996)
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Map/Gates/Gate:isClosed")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.0666667, 2.93333),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+
+[sub_resource type="Animation" id="Animation_vtaks"]
+resource_name = "gate2_open"
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_kvpfn"]
+_data = {
+&"RESET": SubResource("Animation_p57ef"),
+&"gate1_close": SubResource("Animation_gee14"),
+&"gate1_open": SubResource("Animation_0tnpc"),
+&"gate2_close": SubResource("Animation_u5sy4"),
+&"gate2_open": SubResource("Animation_vtaks")
+}
+
 [node name="Game" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -31,10 +147,30 @@ transform = Transform3D(-0.866024, -0.433016, 0.250001, 0, 0.499998, 0.866027, -
 shadow_enabled = true
 
 [node name="OmniLight3D" type="FlickeringOmniLight3D" parent="."]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.94922, 2.65969, -2.37033)
 light_color = Color(1, 0.847059, 0.552941, 1)
+script = null
 
 [node name="ProtoController" parent="." instance=ExtResource("1_lnu2h")]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+script = null
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -19.0033, -4.74847, -1.03684)
@@ -45,17 +181,16 @@ size = Vector3(51.1357, 1, 60.7769)
 
 [node name="Gates" type="Node" parent="Map"]
 
-[node name="Gate" parent="Map/Gates" instance=ExtResource("1_uwrxv")]
+[node name="Gate" parent="Map/Gates" groups=["Gates"] instance=ExtResource("1_uwrxv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.132716, -0.215)
-visible = false
 
-[node name="Gate2" parent="Map/Gates" instance=ExtResource("1_uwrxv")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12705, -8.6988)
-visible = false
+[node name="Gate2" parent="Map/Gates" groups=["Gates"] instance=ExtResource("1_uwrxv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.71359, -0.12705, -8.6988)
 
-[node name="Grate2" parent="Map/Gates" instance=ExtResource("2_yqjtg")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.62642, 0.767284, -1.2432)
+[node name="Grate3" parent="Map/Gates" groups=["Gates"] instance=ExtResource("2_yqjtg")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.62642, 0.767284, -1.23588)
 use_collision = true
+script = ExtResource("5_iywne")
 
 [node name="Hallways" type="Node" parent="Map"]
 
@@ -70,7 +205,7 @@ operation = 2
 size = Vector3(3.58014, 2.83093, 3.60353)
 
 [node name="CSGCylinder3D" type="CSGCylinder3D" parent="Map/Hallways/HallwayOne"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.0301275, -0.139821, 1.9539)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.0301266, -0.139821, 1.9539)
 operation = 2
 radius = 1.65039
 height = 1.28285
@@ -1112,3 +1247,8 @@ operation = 2
 radius = 2.73096
 height = 5.52832
 sides = 64
+
+[node name="GateController" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_kvpfn")
+}
