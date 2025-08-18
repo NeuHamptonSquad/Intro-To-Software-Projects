@@ -19,7 +19,7 @@ impl Widget for PositionMarker {
         let x = x as u16 + area.x;
         let y = y as u16 + area.y;
 
-        // buf.cell_mut((x, y))
-        //     .map(|cell| cell.set_symbol("@").set_fg(Color::Cyan));
+        buf.cell_mut((x, y))
+            .map(|cell| cell.set_symbol("@").set_fg(Color::Cyan));
     }
 }

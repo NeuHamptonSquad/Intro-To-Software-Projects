@@ -67,7 +67,7 @@ impl ITileMapLayer for TerminalTileMapLayer {
 }
 
 impl Widget for &TerminalTileMapLayer {
-    #[instrument(skip_all)]
+    #[instrument(skip(self, buf))]
     fn render(self, mut area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
@@ -136,7 +136,7 @@ impl TerminalTileMap {
 }
 
 impl Widget for &TerminalTileMap {
-    #[instrument(skip_all)]
+    #[instrument(skip(self, buf))]
     fn render(self, area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
