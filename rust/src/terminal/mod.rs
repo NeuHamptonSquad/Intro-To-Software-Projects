@@ -39,10 +39,10 @@ mod cursor_x;
 mod position_marker;
 mod tile_map;
 
-pub const MAP_LEFT: f32 = -41.657928;
-pub const MAP_TOP: f32 = -29.042227;
-pub const MAP_RIGHT: f32 = 4.6509995;
-pub const MAP_BOTTOM: f32 = 26.400513;
+pub const MAP_LEFT: f32 = -27.50863265991211;
+pub const MAP_TOP: f32 = -43.10273361206055;
+pub const MAP_RIGHT: f32 = 27.9832706451416;
+pub const MAP_BOTTOM: f32 = 5.18553352355957;
 
 #[derive(Yokeable)]
 pub struct YokeableText<'a>(Text<'a>);
