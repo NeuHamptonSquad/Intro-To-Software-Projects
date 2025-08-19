@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
 [ext_resource type="Texture2D" uid="uid://0hgejtj2cgma" path="res://assets/2025-08-13_10-05-13.webp" id="2_lbhrr"]
 [ext_resource type="PackedScene" uid="uid://bxr3jjv4hi378" path="res://scenes/grate.tscn" id="2_yqjtg"]
-[ext_resource type="AnimationLibrary" uid="uid://dphpaybo6sr6q" path="res://resources/gate.res" id="4_u5sy4"]
+[ext_resource type="AnimationLibrary" uid="uid://deghv7xcsy1h3" path="res://resources/gate.tres" id="4_p57ef"]
 [ext_resource type="NavigationMesh" uid="uid://c8hd152r507j8" path="res://resources/navmesh.tres" id="6_p57ef"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yqjtg"]
@@ -70,7 +70,7 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -4.195
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Gate"]
 libraries = {
 &"": SubResource("AnimationLibrary_u5sy4"),
-&"gate": ExtResource("4_u5sy4")
+&"gate": ExtResource("4_p57ef")
 }
 
 [node name="Gate2" type="Node3D" parent="Map/Gates"]
@@ -81,7 +81,7 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.3127
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Gate2"]
 libraries = {
 &"": SubResource("AnimationLibrary_u5sy4"),
-&"gate": ExtResource("4_u5sy4")
+&"gate": ExtResource("4_p57ef")
 }
 
 [node name="Grate3" parent="Map/Gates" groups=["Gates"] instance=ExtResource("2_yqjtg")]

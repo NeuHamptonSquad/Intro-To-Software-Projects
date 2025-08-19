@@ -1,0 +1,15 @@
+[gd_resource type="AnimationLibrary" load_steps=2 format=3 uid="uid://deghv7xcsy1h3"]
+
+[sub_resource type="Animation" id="Animation_ulwwl"]
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Gate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, -2.07096, 0, 0)
+
+[resource]
+_data = {
+&"open": SubResource("Animation_ulwwl")
+}
