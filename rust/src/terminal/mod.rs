@@ -1,4 +1,11 @@
-use std::{cell::RefCell, io::stdout, ops::Deref, time::Duration};
+use std::{
+    cell::RefCell,
+    io::PipeWriter,
+    ops::Deref,
+    os::fd::IntoRawFd,
+    process::{Command, Stdio},
+    time::Duration,
+};
 
 use ansi_to_tui::IntoText;
 use clap::Parser;
@@ -7,7 +14,7 @@ use godot::{
     prelude::*,
 };
 use ratatui::{
-    DefaultTerminal,
+    DefaultTerminal, Frame,
     crossterm::{
         self,
         event::{
@@ -48,9 +55,21 @@ pub const MAP_BOTTOM: f32 = 5.18553352355957;
 pub struct YokeableText<'a>(Text<'a>);
 
 #[derive(Default, Clone, Copy)]
-enum TerminalState {
+enum TerminalView {
     #[default]
     MainView,
+}
+
+pub struct TerminalState {
+    main_tile_map: Option<Gd<TerminalTileMap>>,
+    command: String,
+    command_output: Yoke<YokeableText<'static>, String>,
+    view: RefCount<TerminalView>,
+    cursor_x: CursorX,
+    initialized: bool,
+    effect: Effect,
+    paused: bool,
+    player_xy: (f32, f32),
 }
 
 #[derive(GodotClass)]
@@ -58,17 +77,11 @@ enum TerminalState {
 /// This class is responsible for the terminal side
 /// of this game.
 pub struct Terminal {
+    terminal_state: TerminalState,
     base: Base<Node>,
-    main_tile_map: Option<Gd<TerminalTileMap>>,
     terminal: DefaultTerminal,
-    terminal_command: String,
-    terminal_command_output: Yoke<YokeableText<'static>, String>,
-    terminal_state: RefCount<TerminalState>,
-    cursor_x: CursorX,
-    player_xy: (f32, f32),
-    effect: Effect,
-    initialized: bool,
-    paused: bool,
+    #[cfg(unix)]
+    pipe_terminal: Option<ratatui::Terminal<CrosstermBackend<PipeWriter>>>,
 }
 
 #[godot_api]
@@ -76,27 +89,30 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn init(base: Base<Node>) -> Self {
         Self {
-            main_tile_map: None,
+            terminal_state: TerminalState {
+                main_tile_map: None,
+                command: String::new(),
+                command_output: Yoke::attach_to_cart(
+                    String::from("Try typing `help` to get started"),
+                    |cart| YokeableText(Text::from(cart)),
+                ),
+                view: RefCount::new(RefCell::new(TerminalView::default())),
+                cursor_x: CursorX::default(),
+                initialized: false,
+                effect: fx::coalesce((1000, Interpolation::Linear)),
+                paused: false,
+                player_xy: (0.0, 0.0),
+            },
             base,
-            terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
-            terminal_command: String::new(),
-            terminal_command_output: Yoke::attach_to_cart(
-                String::from("Try typing `help` to get started"),
-                |cart| YokeableText(Text::from(cart)),
-            ),
-            terminal_state: RefCount::new(RefCell::new(TerminalState::default())),
-            cursor_x: CursorX::default(),
-            player_xy: (0.0, 0.0),
-            effect: fx::coalesce((1000, Interpolation::Linear)),
-            initialized: false,
-            paused: false,
+            terminal: ratatui::init(),
+            #[cfg(unix)]
+            pipe_terminal: None,
         }
     }
 
     #[instrument(skip_all)]
     fn ready(&mut self) {
-        self.terminal = ratatui::init();
-        self.main_tile_map = self.base().try_get_node_as("MainView");
+        self.terminal_state.main_tile_map = self.base().try_get_node_as("MainView");
         self.signals().init().connect_self(Self::_on_init);
         self.signals().pause().connect_self(Self::_on_pause);
     }
@@ -107,83 +123,14 @@ impl INode for Terminal {
             self.event(crossterm::event::read().unwrap());
         }
         self.terminal
-            .draw(|frame| {
-                let area = frame.area();
-                let [main_area, error_area, terminal_area]: [Rect; 3] = Layout::new(
-                    Direction::Vertical,
-                    [
-                        Constraint::Min(0),
-                        Constraint::Length(
-                            self.terminal_command_output.get().0.height() as u16 + 2,
-                        ),
-                        Constraint::Length(3),
-                    ],
-                )
-                .split(area)
-                .as_ref()
-                .try_into()
-                .unwrap();
-                frame.render_widget(
-                    Paragraph::new(self.terminal_command.as_str())
-                        .block(Block::new().borders(Borders::all())),
-                    terminal_area,
-                );
-                frame.render_widget(
-                    Paragraph::new(self.terminal_command_output.get().0.clone())
-                        .block(Block::new().borders(Borders::all())),
-                    error_area,
-                );
-                frame.set_cursor_position(terminal_area.offset(Offset {
-                    x: self.cursor_x.column() as i32 + 1,
-                    y: 1,
-                }));
-                if self.paused {
-                    let paused_text = Text::from("Paused");
-                    let center = Rect::new(
-                        main_area.x,
-                        main_area.y + (main_area.height / 2),
-                        main_area.width,
-                        paused_text.height() as u16,
-                    );
-                    frame.render_widget(
-                        Paragraph::new(paused_text).alignment(Alignment::Center),
-                        center,
-                    );
-                } else {
-                    if self.initialized {
-                        match *self.terminal_state.borrow() {
-                            TerminalState::MainView => {
-                                if let Some(main_tile_map) = &self.main_tile_map {
-                                    let main_tile_map = main_tile_map.bind();
-                                    let used_rect = main_tile_map.get_used_rect();
-                                    let center = Layout::new(
-                                        Direction::Horizontal,
-                                        [Constraint::Length(used_rect.width)],
-                                    )
-                                    .flex(ratatui::layout::Flex::Center)
-                                    .split(Rect {
-                                        x: main_area.x,
-                                        y: main_area.y,
-                                        width: main_area.width,
-                                        height: used_rect.height,
-                                    })[0];
-                                    frame.render_widget(main_tile_map.deref(), center);
-                                    frame.render_widget(
-                                        PositionMarker(self.player_xy.0, self.player_xy.1),
-                                        center,
-                                    );
-                                }
-                            }
-                        }
-                    }
-                    self.effect.process(
-                        Duration::from_secs_f64(delta),
-                        frame.buffer_mut(),
-                        main_area,
-                    );
-                }
-            })
+            .draw(|frame| self.terminal_state.draw(frame, delta))
             .unwrap();
+        #[cfg(unix)]
+        if let Some(pipe_terminal) = &mut self.pipe_terminal {
+            pipe_terminal
+                .draw(|frame| self.terminal_state.draw(frame, 0.0))
+                .unwrap();
+        }
     }
 
     #[instrument(skip(self))]
@@ -385,19 +332,19 @@ impl Terminal {
     #[func]
     #[instrument(skip(self))]
     fn _on_player_pos_changed(&mut self, x: f32, y: f32) {
-        self.player_xy = (x, y);
+        self.terminal_state.player_xy = (x, y);
         tracing::info!("Player pos changed");
     }
 
     #[func]
     fn _on_init(&mut self) {
-        self.effect = fx::coalesce((1000, Interpolation::Linear));
-        self.initialized = true;
+        self.terminal_state.effect = fx::coalesce((1000, Interpolation::Linear));
+        self.terminal_state.initialized = true;
     }
 
     #[func]
     fn _on_pause(&mut self, state: bool) {
-        self.paused = state;
+        self.terminal_state.paused = state;
     }
 }
 
@@ -406,13 +353,43 @@ impl Terminal {
     fn event(&mut self, event: crossterm::event::Event) {
         tracing::debug!("New Event");
         match event {
+            #[cfg(unix)]
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Char('p' | 'P'),
+                kind: KeyEventKind::Press,
+                modifiers,
+                ..
+            }) if modifiers == KeyModifiers::CONTROL | KeyModifiers::SHIFT => {
+                let (pipe_reader, pipe_writer) = std::io::pipe().unwrap();
+                Command::new("ghostty").args([
+                    "--gtk-single-instance=false",
+                    "--custom-shader=/home/isaacm/PersonalProjects/ghostty-shaders/glitchy.glsl",
+                    format!("--command=cat /proc/{}/fd/{}", std::process::id(), pipe_reader.into_raw_fd()).as_str(),
+                ]).stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap();
+                self.pipe_terminal =
+                    Some(ratatui::Terminal::new(CrosstermBackend::new(pipe_writer)).unwrap());
+            }
+            event::Event::Key(KeyEvent {
+                code: KeyCode::Char('c' | 'C'),
+                kind: KeyEventKind::Press,
+                modifiers,
+                ..
+            }) if modifiers == KeyModifiers::CONTROL | KeyModifiers::SHIFT => {
+                self.terminal.clear().unwrap();
+                #[cfg(unix)]
+                if let Some(pipe_terminal) = &mut self.pipe_terminal {
+                    pipe_terminal.clear().unwrap();
+                }
+            }
             event::Event::Key(KeyEvent {
                 code: KeyCode::Char(c),
                 kind: KeyEventKind::Press,
                 ..
             }) => {
-                self.terminal_command.insert(self.cursor_x.byte(), c);
-                self.cursor_x.incr_by_char(c);
+                self.terminal_state
+                    .command
+                    .insert(self.terminal_state.cursor_x.byte(), c);
+                self.terminal_state.cursor_x.incr_by_char(c);
             }
             event::Event::Key(KeyEvent {
                 code: KeyCode::Left,
@@ -420,11 +397,12 @@ impl Terminal {
                 ..
             }) => {
                 if let Some(char) = self
-                    .terminal_command
+                    .terminal_state
+                    .command
                     .chars()
-                    .nth(self.cursor_x.character().saturating_sub(1))
+                    .nth(self.terminal_state.cursor_x.character().saturating_sub(1))
                 {
-                    self.cursor_x.decr_by_char(char);
+                    self.terminal_state.cursor_x.decr_by_char(char);
                 }
             }
             event::Event::Key(KeyEvent {
@@ -432,8 +410,13 @@ impl Terminal {
                 kind: KeyEventKind::Press,
                 ..
             }) => {
-                if let Some(char) = self.terminal_command.chars().nth(self.cursor_x.character()) {
-                    self.cursor_x.incr_by_char(char);
+                if let Some(char) = self
+                    .terminal_state
+                    .command
+                    .chars()
+                    .nth(self.terminal_state.cursor_x.character())
+                {
+                    self.terminal_state.cursor_x.incr_by_char(char);
                 }
             }
             event::Event::Key(KeyEvent {
@@ -441,7 +424,7 @@ impl Terminal {
                 kind: KeyEventKind::Press,
                 ..
             }) => {
-                self.cursor_x = CursorX::default();
+                self.terminal_state.cursor_x = CursorX::default();
                 self.command();
             }
             event::Event::Key(KeyEvent {
@@ -450,25 +433,26 @@ impl Terminal {
                 kind: KeyEventKind::Press,
                 ..
             }) => {
-                self.cursor_x = CursorX::default();
-                self.terminal_command.clear();
+                self.terminal_state.cursor_x = CursorX::default();
+                self.terminal_state.command.clear();
             }
             event::Event::Key(KeyEvent {
                 code: KeyCode::Backspace,
                 kind: KeyEventKind::Press,
                 ..
             }) => {
-                let character_x = self.cursor_x.character();
+                let character_x = self.terminal_state.cursor_x.character();
                 if character_x == 0 {
                     return;
                 }
                 if let Some((index, char)) = self
-                    .terminal_command
+                    .terminal_state
+                    .command
                     .char_indices()
                     .nth(character_x.saturating_sub(1))
                 {
-                    self.terminal_command.remove(index);
-                    self.cursor_x.decr_by_char(char);
+                    self.terminal_state.command.remove(index);
+                    self.terminal_state.cursor_x.decr_by_char(char);
                 }
             }
             _ => {}
@@ -476,24 +460,24 @@ impl Terminal {
     }
 
     fn command(&mut self) {
-        if let Some(command) = shlex::split(&self.terminal_command) {
-            if !self.paused {
+        if let Some(command) = shlex::split(&self.terminal_state.command) {
+            if !self.terminal_state.paused {
                 self.main_command(command);
             } else {
                 self.pause_command(command);
             }
         }
-        self.terminal_command.clear();
+        self.terminal_state.command.clear();
     }
 
     fn main_command(&mut self, command: Vec<String>) {
         let cli = MainCli::try_parse_from(command);
         match cli {
             Ok(command) => {
-                self.clear_terminal_output();
+                self.terminal_state.clear_output();
                 match command.command {
                     MainCommands::Init => {
-                        if !self.initialized {
+                        if !self.terminal_state.initialized {
                             self.signals().init().emit();
                         }
                     }
@@ -501,7 +485,8 @@ impl Terminal {
                 }
             }
             Err(e) => {
-                self.set_terminal_output(e.render().ansi().to_string());
+                self.terminal_state
+                    .set_output(e.render().ansi().to_string());
             }
         }
     }
@@ -510,24 +495,100 @@ impl Terminal {
         let cli = PauseCli::try_parse_from(command);
         match cli {
             Ok(command) => {
-                self.clear_terminal_output();
+                self.terminal_state.clear_output();
                 match command.command {
                     PauseCommands::UnPause => self.signals().pause().emit(false),
                 }
             }
             Err(e) => {
-                self.set_terminal_output(e.render().ansi().to_string());
+                self.terminal_state
+                    .set_output(e.render().ansi().to_string());
             }
         }
     }
+}
 
-    fn set_terminal_output(&mut self, output: String) {
-        self.terminal_command_output =
+impl TerminalState {
+    fn draw(&mut self, frame: &mut Frame, delta: f64) {
+        let area = frame.area();
+        let [main_area, error_area, terminal_area]: [Rect; 3] = Layout::new(
+            Direction::Vertical,
+            [
+                Constraint::Min(0),
+                Constraint::Length(self.command_output.get().0.height() as u16 + 2),
+                Constraint::Length(3),
+            ],
+        )
+        .split(area)
+        .as_ref()
+        .try_into()
+        .unwrap();
+        frame.render_widget(
+            Paragraph::new(self.command.as_str()).block(Block::new().borders(Borders::all())),
+            terminal_area,
+        );
+        frame.render_widget(
+            Paragraph::new(self.command_output.get().0.clone())
+                .block(Block::new().borders(Borders::all())),
+            error_area,
+        );
+        frame.set_cursor_position(terminal_area.offset(Offset {
+            x: self.cursor_x.column() as i32 + 1,
+            y: 1,
+        }));
+        if self.paused {
+            let paused_text = Text::from("Paused");
+            let center = Rect::new(
+                main_area.x,
+                main_area.y + (main_area.height / 2),
+                main_area.width,
+                paused_text.height() as u16,
+            );
+            frame.render_widget(
+                Paragraph::new(paused_text).alignment(Alignment::Center),
+                center,
+            );
+        } else {
+            if self.initialized {
+                match *self.view.borrow() {
+                    TerminalView::MainView => {
+                        if let Some(main_tile_map) = &self.main_tile_map {
+                            let main_tile_map = main_tile_map.bind();
+                            let used_rect = main_tile_map.get_used_rect();
+                            let center = Layout::new(
+                                Direction::Horizontal,
+                                [Constraint::Length(used_rect.width)],
+                            )
+                            .flex(ratatui::layout::Flex::Center)
+                            .split(Rect {
+                                x: main_area.x,
+                                y: main_area.y,
+                                width: main_area.width,
+                                height: used_rect.height,
+                            })[0];
+                            frame.render_widget(main_tile_map.deref(), center);
+                            frame.render_widget(
+                                PositionMarker(self.player_xy.0, self.player_xy.1),
+                                center,
+                            );
+                        }
+                    }
+                }
+            }
+            self.effect.process(
+                Duration::from_secs_f64(delta),
+                frame.buffer_mut(),
+                main_area,
+            );
+        }
+    }
+
+    fn set_output(&mut self, output: String) {
+        self.command_output =
             Yoke::attach_to_cart(output, |f| YokeableText(f.into_text().unwrap()));
     }
 
-    fn clear_terminal_output(&mut self) {
-        self.terminal_command_output =
-            Yoke::attach_to_cart(String::new(), |f| YokeableText(Text::from(f)));
+    fn clear_output(&mut self) {
+        self.command_output = Yoke::attach_to_cart(String::new(), |f| YokeableText(Text::from(f)));
     }
 }
