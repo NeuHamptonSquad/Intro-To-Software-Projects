@@ -1,11 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://dgjwhnxth0j3c"]
+[gd_scene load_steps=13 format=3 uid="uid://dgjwhnxth0j3c"]
 
 [ext_resource type="PackedScene" uid="uid://bs72ogkvdd7d6" path="res://addons/proto_controller/proto_controller.tscn" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
 [ext_resource type="Texture2D" uid="uid://0hgejtj2cgma" path="res://assets/2025-08-13_10-05-13.webp" id="2_lbhrr"]
 [ext_resource type="PackedScene" uid="uid://bxr3jjv4hi378" path="res://scenes/grate.tscn" id="2_yqjtg"]
-[ext_resource type="Script" uid="uid://dr0n0yog0xeh2" path="res://scenes/grate.gd" id="5_iywne"]
-[ext_resource type="NavigationMesh" uid="uid://c8hd152r507j8" path="res://scenes/navmesh.tres" id="6_p57ef"]
+[ext_resource type="AnimationLibrary" uid="uid://dphpaybo6sr6q" path="res://resources/gate.res" id="4_u5sy4"]
+[ext_resource type="NavigationMesh" uid="uid://c8hd152r507j8" path="res://resources/navmesh.tres" id="6_p57ef"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yqjtg"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -28,114 +28,14 @@ length = 0.001
 tracks/0/type = "position_3d"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Map/Gates/Gate")
+tracks/0/path = NodePath("Gate")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0, 1, 0, -0.132716, -0.215)
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Map/Gates/Gate2:isClosed")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("Map/Gates/Gate:isClosed")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
 
-[sub_resource type="Animation" id="Animation_gee14"]
-resource_name = "gate1_close"
-length = 4.0
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Map/Gates/Gate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0.0666667, 1, 0, -0.132716, -0.157996, 3.06667, 1, 1.88315, -0.132716, -0.157996)
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Map/Gates/Gate:isClosed")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 3),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [false, true]
-}
-
-[sub_resource type="Animation" id="Animation_0tnpc"]
-resource_name = "gate1_open"
-length = 3.0
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Map/Gates/Gate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0.0666667, 1, 1.8291, -0.132716, -0.157996, 3, 1, -0.0149844, -0.132716, -0.157996)
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Map/Gates/Gate:isClosed")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0.0666667, 2.93333),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
-}
-
-[sub_resource type="Animation" id="Animation_u5sy4"]
-resource_name = "gate2_close"
-length = 4.0
-tracks/0/type = "position_3d"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Map/Gates/Gate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = PackedFloat32Array(0.0666667, 1, 0, -0.132716, -0.215, 3.06667, 1, 0, -0.132716, -0.215)
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Map/Gates/Gate2:isClosed")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0.0333333, 3.06667),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [false, true]
-}
-
-[sub_resource type="Animation" id="Animation_vtaks"]
-resource_name = "gate2_open"
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_kvpfn"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_u5sy4"]
 _data = {
-&"RESET": SubResource("Animation_p57ef"),
-&"gate1_close": SubResource("Animation_gee14"),
-&"gate1_open": SubResource("Animation_0tnpc"),
-&"gate2_close": SubResource("Animation_u5sy4"),
-&"gate2_open": SubResource("Animation_vtaks")
+&"RESET": SubResource("Animation_p57ef")
 }
 
 [node name="Game" type="Node3D"]
@@ -162,18 +62,31 @@ size = Vector3(51.1357, 1, 60.7769)
 
 [node name="Gates" type="Node" parent="Map"]
 
-[node name="Gate" parent="Map/Gates" instance=ExtResource("1_uwrxv")]
-transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 0, -0.132716, -0.215)
-visible = false
+[node name="Gate" type="Node3D" parent="Map/Gates"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -4.19528, 1.74949, 0.0239322)
 
-[node name="Gate2" parent="Map/Gates" instance=ExtResource("1_uwrxv")]
-transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 7.5749, -0.127049, 0.614832)
-visible = false
+[node name="Gate" parent="Map/Gates/Gate" instance=ExtResource("1_uwrxv")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Gate"]
+libraries = {
+&"": SubResource("AnimationLibrary_u5sy4"),
+&"gate": ExtResource("4_u5sy4")
+}
+
+[node name="Gate2" type="Node3D" parent="Map/Gates"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.31276, 1.76924, -0.125785)
+
+[node name="Gate" parent="Map/Gates/Gate2" instance=ExtResource("1_uwrxv")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Gate2"]
+libraries = {
+&"": SubResource("AnimationLibrary_u5sy4"),
+&"gate": ExtResource("4_u5sy4")
+}
 
 [node name="Grate3" parent="Map/Gates" groups=["Gates"] instance=ExtResource("2_yqjtg")]
 transform = Transform3D(-1, -4.37114e-08, 8.74228e-08, -4.37114e-08, 1, -4.37114e-08, -8.74228e-08, -4.37114e-08, -1, 0.119299, 0.767285, -3.01159)
 use_collision = true
-script = ExtResource("5_iywne")
 
 [node name="Vents" type="Node" parent="Map"]
 
@@ -1253,8 +1166,3 @@ height = 8.0
 vertices = PackedVector3Array(-29.509, 0, 5.186, -29.509, 0, -43.103, 29.983, 0, -43.103, 29.983, 0, 5.186)
 affect_navigation_mesh = true
 avoidance_enabled = false
-
-[node name="GateController" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_kvpfn")
-}
