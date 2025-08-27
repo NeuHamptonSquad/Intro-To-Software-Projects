@@ -102,6 +102,14 @@ impl Widget for &TerminalTileMapLayer {
 pub struct TerminalTileMap {
     base: Base<Node>,
     layers: Vec<Gd<TerminalTileMapLayer>>,
+    #[export]
+    pos_left: f32,
+    #[export]
+    pos_top: f32,
+    #[export]
+    pos_right: f32,
+    #[export]
+    pos_bottom: f32,
 }
 
 #[godot_api]
@@ -111,6 +119,10 @@ impl INode for TerminalTileMap {
         Self {
             base,
             layers: Vec::new(),
+            pos_left: 0.0,
+            pos_top: 0.0,
+            pos_right: 0.0,
+            pos_bottom: 0.0,
         }
     }
 

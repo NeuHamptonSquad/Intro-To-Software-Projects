@@ -62,7 +62,8 @@ size = Vector3(51.1357, 1, 60.7769)
 
 [node name="Gates" type="Node" parent="Map"]
 
-[node name="Gate" type="Node3D" parent="Map/Gates"]
+[node name="Gate" type="Gate" parent="Map/Gates"]
+gate_number = 1
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -4.19528, 1.74949, 0.0239322)
 
 [node name="Gate" parent="Map/Gates/Gate" instance=ExtResource("1_uwrxv")]
@@ -73,7 +74,8 @@ libraries = {
 &"gate": ExtResource("4_p57ef")
 }
 
-[node name="Gate2" type="Node3D" parent="Map/Gates"]
+[node name="Gate2" type="Gate" parent="Map/Gates"]
+gate_number = 2
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.31276, 1.76924, -0.125785)
 
 [node name="Gate" parent="Map/Gates/Gate2" instance=ExtResource("1_uwrxv")]
@@ -690,6 +692,7 @@ sides = 26
 
 [node name="R2Room" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms"]
 transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 25.0122, 2.05125, -30.5746)
+use_collision = true
 size = Vector3(14.5956, 4.94852, 7.83968)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms/R2Room"]
@@ -723,6 +726,7 @@ size = Vector3(0.849792, 0.535706, 0.901672)
 
 [node name="R1Room" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms"]
 transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 25.0206, 2.05125, -9.29855)
+use_collision = true
 size = Vector3(14.6044, 4.94852, 7.73065)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms/R1Room"]
@@ -751,6 +755,7 @@ size = Vector3(0.613647, 0.487549, 0.955688)
 
 [node name="L1Room" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms"]
 transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, -24.7617, 2.05125, -9.28917)
+use_collision = true
 size = Vector3(14.5858, 4.94852, 7.7066)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms/L1Room"]
@@ -779,6 +784,7 @@ size = Vector3(0.613647, 0.487549, 1.05191)
 
 [node name="L2Room" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms"]
 transform = Transform3D(-4.37114e-08, -4.37114e-08, -1, 4.37114e-08, 1, -4.37114e-08, 1, -4.37114e-08, -4.37114e-08, -24.7783, 2.0618, -30.5766)
+use_collision = true
 size = Vector3(14.555, 4.94852, 7.68643)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Map/NavigationRegion3D/Rooms/L2Room"]

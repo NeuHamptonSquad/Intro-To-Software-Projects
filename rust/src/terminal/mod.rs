@@ -33,7 +33,7 @@ use yoke::{Yoke, Yokeable};
 
 use crate::terminal::{
     commands::{
-        main::{MainCli, MainCommands},
+        main::{GateOperation, MainCli, MainCommands},
         pause::{PauseCli, PauseCommands},
     },
     cursor_x::CursorX,
@@ -46,11 +46,6 @@ mod cursor_x;
 mod position_marker;
 mod tile_map;
 
-pub const MAP_LEFT: f32 = -27.50863265991211;
-pub const MAP_TOP: f32 = -43.10273361206055;
-pub const MAP_RIGHT: f32 = 27.9832706451416;
-pub const MAP_BOTTOM: f32 = 5.18553352355957;
-
 #[derive(Yokeable)]
 pub struct YokeableText<'a>(Text<'a>);
 
@@ -58,10 +53,30 @@ pub struct YokeableText<'a>(Text<'a>);
 enum TerminalView {
     #[default]
     MainView,
+    Room1,
+    Room2,
+    Room3,
+    Room4,
+}
+
+impl From<commands::main::Area> for TerminalView {
+    fn from(value: commands::main::Area) -> Self {
+        match value {
+            commands::main::Area::MainView => Self::MainView,
+            commands::main::Area::Room1 => Self::Room1,
+            commands::main::Area::Room2 => Self::Room2,
+            commands::main::Area::Room3 => Self::Room3,
+            commands::main::Area::Room4 => Self::Room4,
+        }
+    }
 }
 
 pub struct TerminalState {
     main_tile_map: Option<Gd<TerminalTileMap>>,
+    room_1_tile_map: Option<Gd<TerminalTileMap>>,
+    room_2_tile_map: Option<Gd<TerminalTileMap>>,
+    room_3_tile_map: Option<Gd<TerminalTileMap>>,
+    room_4_tile_map: Option<Gd<TerminalTileMap>>,
     command: String,
     command_output: Yoke<YokeableText<'static>, String>,
     view: RefCount<TerminalView>,
@@ -91,6 +106,10 @@ impl INode for Terminal {
         Self {
             terminal_state: TerminalState {
                 main_tile_map: None,
+                room_1_tile_map: None,
+                room_2_tile_map: None,
+                room_3_tile_map: None,
+                room_4_tile_map: None,
                 command: String::new(),
                 command_output: Yoke::attach_to_cart(
                     String::from("Try typing `help` to get started"),
@@ -113,6 +132,10 @@ impl INode for Terminal {
     #[instrument(skip_all)]
     fn ready(&mut self) {
         self.terminal_state.main_tile_map = self.base().try_get_node_as("MainView");
+        self.terminal_state.room_1_tile_map = self.base().try_get_node_as("Room1");
+        self.terminal_state.room_2_tile_map = self.base().try_get_node_as("Room2");
+        self.terminal_state.room_3_tile_map = self.base().try_get_node_as("Room3");
+        self.terminal_state.room_4_tile_map = self.base().try_get_node_as("Room4");
         self.signals().init().connect_self(Self::_on_init);
         self.signals().pause().connect_self(Self::_on_pause);
     }
@@ -329,6 +352,15 @@ impl Terminal {
     #[signal]
     fn pause(state: bool);
 
+    #[signal]
+    fn gate_1(opened: bool);
+    #[signal]
+    fn gate_2(opened: bool);
+    #[signal]
+    fn gate_3(opened: bool);
+    #[signal]
+    fn gate_4(opened: bool);
+
     #[func]
     #[instrument(skip(self))]
     fn _on_player_pos_changed(&mut self, x: f32, y: f32) {
@@ -482,6 +514,21 @@ impl Terminal {
                         }
                     }
                     MainCommands::Pause => self.signals().pause().emit(true),
+                    MainCommands::Gate(gate_args) => {
+                        let opened = match gate_args.operation {
+                            GateOperation::Open => true,
+                            GateOperation::Close => false,
+                        };
+                        match gate_args.gate {
+                            1 => self.signals().gate_1().emit(opened),
+                            2 => self.signals().gate_2().emit(opened),
+                            3 => self.signals().gate_3().emit(opened),
+                            _ => self.signals().gate_4().emit(opened),
+                        }
+                    }
+                    MainCommands::Zoom { area } => {
+                        *self.terminal_state.view.borrow_mut() = area.into();
+                    }
                 }
             }
             Err(e) => {
@@ -550,15 +597,18 @@ impl TerminalState {
             );
         } else {
             if self.initialized {
-                match *self.view.borrow() {
-                    TerminalView::MainView => {
-                        if let Some(main_tile_map) = &self.main_tile_map {
-                            let main_tile_map = main_tile_map.bind();
-                            let used_rect = main_tile_map.get_used_rect();
-                            let center = Layout::new(
-                                Direction::Horizontal,
-                                [Constraint::Length(used_rect.width)],
-                            )
+                let tile_map = match *self.view.borrow() {
+                    TerminalView::MainView => &self.main_tile_map,
+                    TerminalView::Room1 => &self.room_1_tile_map,
+                    TerminalView::Room2 => &self.room_2_tile_map,
+                    TerminalView::Room3 => &self.room_3_tile_map,
+                    TerminalView::Room4 => &self.room_4_tile_map,
+                };
+                if let Some(tile_map) = tile_map {
+                    let tile_map = tile_map.bind();
+                    let used_rect = tile_map.get_used_rect();
+                    let center =
+                        Layout::new(Direction::Horizontal, [Constraint::Length(used_rect.width)])
                             .flex(ratatui::layout::Flex::Center)
                             .split(Rect {
                                 x: main_area.x,
@@ -566,13 +616,11 @@ impl TerminalState {
                                 width: main_area.width,
                                 height: used_rect.height,
                             })[0];
-                            frame.render_widget(main_tile_map.deref(), center);
-                            frame.render_widget(
-                                PositionMarker(self.player_xy.0, self.player_xy.1),
-                                center,
-                            );
-                        }
-                    }
+                    frame.render_widget(tile_map.deref(), center);
+                    frame.render_widget(
+                        PositionMarker(self.player_xy.0, self.player_xy.1, tile_map),
+                        center,
+                    );
                 }
             }
             self.effect.process(
