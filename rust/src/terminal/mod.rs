@@ -1,11 +1,11 @@
 use std::{
     cell::RefCell,
-    io::PipeWriter,
     ops::Deref,
-    os::fd::IntoRawFd,
-    process::{Command, Stdio},
     time::Duration,
 };
+
+#[cfg(unix)]
+use std::{os::fd::IntoRawFd, io::PipeWriter, process::{Stdio, Command}};
 
 use ansi_to_tui::IntoText;
 use clap::Parser;
@@ -23,7 +23,7 @@ use ratatui::{
         },
     },
     layout::{Alignment, Constraint, Direction, Layout, Offset, Rect},
-    prelude::CrosstermBackend,
+    // prelude::CrosstermBackend,
     text::Text,
     widgets::{Block, Borders, Paragraph},
 };
