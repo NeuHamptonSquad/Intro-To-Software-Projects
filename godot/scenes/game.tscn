@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://dgjwhnxth0j3c"]
+[gd_scene load_steps=30 format=3 uid="uid://dgjwhnxth0j3c"]
 
 [ext_resource type="PackedScene" uid="uid://bs72ogkvdd7d6" path="res://addons/proto_controller/proto_controller.tscn" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
@@ -10,6 +10,7 @@
 [ext_resource type="AnimationLibrary" uid="uid://ce82t0vd8uoqr" path="res://resources/vent.tres" id="6_u5sy4"]
 [ext_resource type="AudioStream" uid="uid://k0kkn562wjac" path="res://audio/Doors/Door/open_door.wav" id="7_vtaks"]
 [ext_resource type="AudioStream" uid="uid://cr1d6qve261nc" path="res://audio/Doors/Door/close_door.mp3" id="8_kvpfn"]
+[ext_resource type="Script" uid="uid://cvfxfbmav23t0" path="res://scenes/VentAnim.gd" id="10_5newe"]
 [ext_resource type="AudioStream" uid="uid://ckv216cwa1kln" path="res://audio/Ambeant/sewer_water.wav" id="10_vtaks"]
 [ext_resource type="AudioStream" uid="uid://bp0488snfm6la" path="res://audio/Ambeant/water_drips.mp3" id="11_kvpfn"]
 [ext_resource type="Script" uid="uid://b20y7dfrewf26" path="res://scenes/EnemySFX.gd" id="12_dinhu"]
@@ -152,6 +153,14 @@ libraries = {
 &"": SubResource("AnimationLibrary_0tnpc"),
 &"vent": ExtResource("6_u5sy4")
 }
+script = ExtResource("10_5newe")
+
+[node name="VentSfxOpen" type="AudioStreamPlayer3D" parent="Map/Gates/Vent"]
+stream = ExtResource("7_vtaks")
+
+[node name="VentSfxClose" type="AudioStreamPlayer3D" parent="Map/Gates/Vent"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.0239324, -1.74949, -4.19528)
+stream = ExtResource("8_kvpfn")
 
 [node name="Vent2" type="Vent" parent="Map/Gates"]
 vent_number = 2
@@ -164,6 +173,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 libraries = {
 &"vent": ExtResource("6_u5sy4")
 }
+script = ExtResource("10_5newe")
+
+[node name="VentSfxOpen" type="AudioStreamPlayer3D" parent="Map/Gates/Vent2"]
+stream = ExtResource("7_vtaks")
+
+[node name="VentSfxClose" type="AudioStreamPlayer3D" parent="Map/Gates/Vent2"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.0239324, -1.74949, -4.19528)
+stream = ExtResource("8_kvpfn")
 
 [node name="Vents" type="Node" parent="Map"]
 
