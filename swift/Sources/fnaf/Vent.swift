@@ -1,5 +1,5 @@
 //
-// Gate.swift
+// Vent.swift
 //
 // Created by Isaac Mills (08/27/25)
 //
@@ -7,26 +7,26 @@
 import SwiftGodot
 
 @Godot
-class Gate: Node3D {
+class Vent: Node3D {
   @Node("/root/GlobalTerminal") var terminal: Node?
-  @Node("Gate") var gate: CSGCombiner3D?
+  @Node("Vent") var vent: CSGBox3D?
   @Node("AnimationPlayer") var animationPlayer: AnimationPlayer?
-  @Export var gateNumber: Int = 0
+  @Export var ventNumber: Int = 0
 
   var isOpen: Bool = false
 
   override func _ready() {
-    let callable = Callable(object: self, method: StringName("_onGate"))
+    let callable = Callable(object: self, method: StringName("_onVent"))
     if self.terminal == nil {
-      Logger.error(log: "This Gate could not find the global terminal")
+      Logger.error(log: "This Vent could not find the global terminal")
     }
-    if self.gate == nil {
-      Logger.error(log: "This Gate could not find it's gate CSGCombiner3D")
+    if self.vent == nil {
+      Logger.error(log: "This Vent could not find it's vent CSGCombiner3D")
     }
     if self.animationPlayer == nil {
-      Logger.error(log: "This Gate could not find it's AnimationPlayer")
+      Logger.error(log: "This Vent could not find it's AnimationPlayer")
     }
-    self.terminal?.connect(signal: "gate_\(gateNumber)", callable: callable)
+    self.terminal?.connect(signal: "vent_\(ventNumber)", callable: callable)
   }
 
   // override func _process(delta: Double) {
@@ -41,15 +41,15 @@ class Gate: Node3D {
   // }
 
   @Callable
-  func _onGate(opened: Bool) {
+  func _onVent(opened: Bool) {
     if opened {
       if !isOpen {
-        animationPlayer?.play(name: "gate/open")
+        animationPlayer?.play(name: "vent/open")
         isOpen = true
       }
     } else {
       if isOpen {
-        animationPlayer?.playBackwards(name: "gate/open")
+        animationPlayer?.playBackwards(name: "vent/open")
         isOpen = false
       }
     }

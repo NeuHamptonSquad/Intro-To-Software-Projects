@@ -1,0 +1,22 @@
+[gd_resource type="AnimationLibrary" load_steps=2 format=3 uid="uid://ce82t0vd8uoqr"]
+
+[sub_resource type="Animation" id="Animation_8r1ry"]
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Vent")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, 1, -0.707107, 0, 0, 0.707107)
+tracks/1/type = "position_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Vent")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 1, 0, 0.213363, 0.231923)
+
+[resource]
+_data = {
+&"open": SubResource("Animation_8r1ry")
+}

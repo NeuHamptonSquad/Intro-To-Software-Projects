@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bxr3jjv4hi378"]
 
 [node name="Grate" type="CSGBox3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.229736, -0.458008)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0012722, -0.00841537, -0.00632259)
 size = Vector3(1, 0.540527, 0.0839844)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]

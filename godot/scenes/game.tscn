@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dgjwhnxth0j3c"]
+[gd_scene load_steps=16 format=3 uid="uid://dgjwhnxth0j3c"]
 
 [ext_resource type="PackedScene" uid="uid://bs72ogkvdd7d6" path="res://addons/proto_controller/proto_controller.tscn" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://dfjv0438wdu0y" path="res://scenes/gate.tscn" id="1_uwrxv"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bxr3jjv4hi378" path="res://scenes/grate.tscn" id="2_yqjtg"]
 [ext_resource type="AnimationLibrary" uid="uid://deghv7xcsy1h3" path="res://resources/gate.tres" id="4_p57ef"]
 [ext_resource type="NavigationMesh" uid="uid://c8hd152r507j8" path="res://resources/navmesh.tres" id="6_p57ef"]
+[ext_resource type="AnimationLibrary" uid="uid://ce82t0vd8uoqr" path="res://resources/vent.tres" id="6_u5sy4"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yqjtg"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -36,6 +37,28 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0)
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_u5sy4"]
 _data = {
 &"RESET": SubResource("Animation_p57ef")
+}
+
+[sub_resource type="Animation" id="Animation_gee14"]
+length = 0.001
+tracks/0/type = "rotation_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Vent")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
+tracks/1/type = "position_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Vent")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0)
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0tnpc"]
+_data = {
+&"RESET": SubResource("Animation_gee14")
 }
 
 [node name="Game" type="Node3D"]
@@ -86,9 +109,31 @@ libraries = {
 &"gate": ExtResource("4_p57ef")
 }
 
-[node name="Grate3" parent="Map/Gates" groups=["Gates"] instance=ExtResource("2_yqjtg")]
-transform = Transform3D(-1, -4.37114e-08, 8.74228e-08, -4.37114e-08, 1, -4.37114e-08, -8.74228e-08, -4.37114e-08, -1, 0.119299, 0.767285, -3.01159)
+[node name="Vent" type="Vent" parent="Map/Gates"]
+vent_number = 1
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.119, 0.767, -3.012)
+
+[node name="Vent" parent="Map/Gates/Vent" groups=["Gates"] instance=ExtResource("2_yqjtg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 use_collision = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Vent"]
+libraries = {
+&"": SubResource("AnimationLibrary_0tnpc"),
+&"vent": ExtResource("6_u5sy4")
+}
+
+[node name="Vent2" type="Vent" parent="Map/Gates"]
+vent_number = 2
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.147, 0.761, -7.133)
+
+[node name="Vent" parent="Map/Gates/Vent2" instance=ExtResource("2_yqjtg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Map/Gates/Vent2"]
+libraries = {
+&"vent": ExtResource("6_u5sy4")
+}
 
 [node name="Vents" type="Node" parent="Map"]
 
@@ -672,9 +717,6 @@ size = Vector3(4.30774, 2.73275, 4.52551)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.58614, -1.14131, -0.0151486)
 operation = 2
 size = Vector3(1, 0.475647, 0.965332)
-
-[node name="Grate" parent="Map/NavigationRegion3D/Rooms/Office" instance=ExtResource("2_yqjtg")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.18317, -1.14631, -0.0142149)
 
 [node name="Arch" type="CSGCombiner3D" parent="Map/NavigationRegion3D/Rooms/Office"]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -5.14249, 0, -0.165141)

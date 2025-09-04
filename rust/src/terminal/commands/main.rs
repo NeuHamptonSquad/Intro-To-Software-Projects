@@ -15,6 +15,8 @@ pub enum MainCommands {
     Pause,
     /// Opens/Closes a gate
     Gate(GateArgs),
+    /// Opens/Closes a vent
+    Vent(GateArgs),
     /// Zooms in on an area, allowing you to operate
     /// on said area
     Zoom {

@@ -360,6 +360,14 @@ impl Terminal {
     fn gate_3(opened: bool);
     #[signal]
     fn gate_4(opened: bool);
+    #[signal]
+    fn vent_1(opened: bool);
+    #[signal]
+    fn vent_2(opened: bool);
+    #[signal]
+    fn vent_3(opened: bool);
+    #[signal]
+    fn vent_4(opened: bool);
 
     #[func]
     #[instrument(skip(self))]
@@ -524,6 +532,18 @@ impl Terminal {
                             2 => self.signals().gate_2().emit(opened),
                             3 => self.signals().gate_3().emit(opened),
                             _ => self.signals().gate_4().emit(opened),
+                        }
+                    }
+                    MainCommands::Vent(gate_args) => {
+                        let opened = match gate_args.operation {
+                            GateOperation::Open => true,
+                            GateOperation::Close => false,
+                        };
+                        match gate_args.gate {
+                            1 => self.signals().vent_1().emit(opened),
+                            2 => self.signals().vent_2().emit(opened),
+                            3 => self.signals().vent_3().emit(opened),
+                            _ => self.signals().vent_4().emit(opened),
                         }
                     }
                     MainCommands::Zoom { area } => {
